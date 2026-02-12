@@ -29,10 +29,25 @@ export default function ChartPanel({
   config,
   data,
   warning,
+  title,
+  onRemove,
+  onEdit,
+  isTitleEditing,
+  onTitleChange,
+  onTitleBlur,
+  draggableProps,
 }: {
   config: ChartConfig;
   data: any[];
   warning?: string;
+  title?: string;
+  onRemove?: () => void;
+  onEdit?: () => void;
+  isTitleEditing?: boolean;
+  onTitleChange?: (value: string) => void;
+  onTitleBlur?: () => void;
+  onStartRename?: () => void;
+  draggableProps?: React.HTMLAttributes<HTMLDivElement>;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -136,19 +151,58 @@ export default function ChartPanel({
   };
 
   return (
-    <div className="card p-5">
+    <div className="card p-5" {...draggableProps}>
       <div className="flex items-center justify-between">
         <div>
           <p className="section-title">Chart output</p>
-          <h3 className="text-lg font-semibold">{config.type.toUpperCase()} chart</h3>
+          {isTitleEditing ? (
+            <input
+              className="mt-1 w-full rounded-md border border-slate/20 px-2 py-1 text-sm font-semibold"
+              value={title ?? ''}
+              onChange={(event) => onTitleChange?.(event.target.value)}
+              onBlur={onTitleBlur}
+              autoFocus
+            />
+          ) : (
+            <h3 className="text-lg font-semibold">{title ?? `${config.type.toUpperCase()} chart`}</h3>
+          )}
         </div>
-        <button
-          type="button"
-          className="rounded-full border border-slate/20 px-3 py-1 text-xs font-semibold"
-          onClick={exportPng}
-        >
-          Export chart as PNG
-        </button>
+        <div className="flex items-center gap-2">
+          {onEdit ? (
+            <button
+              type="button"
+              className="rounded-full border border-slate/20 px-3 py-1 text-xs font-semibold text-slate/60"
+              onClick={onEdit}
+            >
+              Edit
+            </button>
+          ) : null}
+          {onRemove ? (
+            <button
+              type="button"
+              className="rounded-full border border-slate/20 px-3 py-1 text-xs font-semibold text-slate/60"
+              onClick={onRemove}
+            >
+              Remove
+            </button>
+          ) : null}
+          {onTitleChange ? (
+            <button
+              type="button"
+              className="rounded-full border border-slate/20 px-3 py-1 text-xs font-semibold text-slate/60"
+              onClick={isTitleEditing ? onTitleBlur : onStartRename}
+            >
+              {isTitleEditing ? 'Done' : 'Rename'}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="rounded-full border border-slate/20 px-3 py-1 text-xs font-semibold"
+            onClick={exportPng}
+          >
+            Export chart as PNG
+          </button>
+        </div>
       </div>
       {warning ? <div className="mt-3 text-xs text-warning">{warning}</div> : null}
       <div ref={ref} className="mt-4 rounded-xl bg-white p-3">

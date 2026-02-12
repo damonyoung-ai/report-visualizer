@@ -30,6 +30,12 @@ export default function Home() {
     topN: 10,
     excludeMissing: true,
   });
+  const [charts, setCharts] = useState<
+    { id: string; title: string; config: ChartConfig }[]
+  >([]);
+  const [activeChartId, setActiveChartId] = useState<string | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
 
   const [activeSheet, setActiveSheet] = useState<string | undefined>(undefined);
 
@@ -74,6 +80,9 @@ export default function Home() {
       };
 
       setDataset(nextDataset);
+      setCharts([]);
+      setActiveChartId(null);
+      setRenamingId(null);
 
       const numericCols = columns.filter((col) => col.detectedType === 'number');
       const categoryCols = columns.filter((col) => col.detectedType === 'category' || col.detectedType === 'string');
@@ -121,30 +130,30 @@ export default function Home() {
   const suggestedNumeric = detectMostVariantNumeric(columns) ?? numericColumns[0];
   const suggestedCategory = categoryColumns[0];
 
-  const chartData = useMemo(() => {
+  const buildChartData = (config: ChartConfig) => {
     if (!dataset) return [];
     const rows = dataset.rows;
 
-    if (chartConfig.type === 'bar' || chartConfig.type === 'pie') {
-      if (!chartConfig.xKey) return [];
+    if (config.type === 'bar' || config.type === 'pie') {
+      if (!config.xKey) return [];
       const result = groupByAggregate(
         rows,
-        chartConfig.xKey,
-        chartConfig.yKey,
-        chartConfig.aggregation || 'count',
-        chartConfig.excludeMissing ?? true
+        config.xKey,
+        config.yKey,
+        config.aggregation || 'count',
+        config.excludeMissing ?? true
       );
-      const topN = chartConfig.topN ?? 10;
+      const topN = config.topN ?? 10;
       return result.slice(0, topN);
     }
 
-    if (chartConfig.type === 'line' || chartConfig.type === 'area') {
-      if (!chartConfig.xKey || !chartConfig.yKey) return [];
+    if (config.type === 'line' || config.type === 'area') {
+      if (!config.xKey || !config.yKey) return [];
       const grouped = new Map<string, number[]>();
       for (const row of rows) {
-        const x = row[chartConfig.xKey];
-        const y = row[chartConfig.yKey];
-        if (chartConfig.excludeMissing && (x === null || x === undefined || y === null || y === undefined)) continue;
+        const x = row[config.xKey];
+        const y = row[config.yKey];
+        if (config.excludeMissing && (x === null || x === undefined || y === null || y === undefined)) continue;
         const key = String(x ?? 'Missing');
         const yNum = typeof y === 'number' ? y : Number(y);
         if (!Number.isFinite(yNum)) continue;
@@ -157,7 +166,7 @@ export default function Home() {
         const min = Math.min(...values);
         const max = Math.max(...values);
         let value = sum;
-        switch (chartConfig.aggregation) {
+        switch (config.aggregation) {
           case 'avg':
             value = avg;
             break;
@@ -188,45 +197,101 @@ export default function Home() {
       return downsample(sorted, CHART_LIMIT, 'Line/area chart').rows;
     }
 
-    if (chartConfig.type === 'scatter') {
-      if (!chartConfig.xKey || !chartConfig.yKey) return [];
+    if (config.type === 'scatter') {
+      if (!config.xKey || !config.yKey) return [];
       const series = extractScatterSeries(
         rows,
-        chartConfig.xKey,
-        chartConfig.yKey,
-        chartConfig.colorKey,
-        chartConfig.excludeMissing ?? true
+        config.xKey,
+        config.yKey,
+        config.colorKey,
+        config.excludeMissing ?? true
       );
       return downsample(series, CHART_LIMIT, 'Scatter chart').rows;
     }
 
-    if (chartConfig.type === 'histogram') {
-      if (!chartConfig.xKey) return [];
-      return buildHistogram(rows, chartConfig.xKey, 12, chartConfig.excludeMissing ?? true);
+    if (config.type === 'histogram') {
+      if (!config.xKey) return [];
+      return buildHistogram(rows, config.xKey, 12, config.excludeMissing ?? true);
     }
 
     return [];
-  }, [chartConfig, dataset]);
+  };
 
-  const chartWarning = useMemo(() => {
+  const buildChartWarning = (config: ChartConfig) => {
     if (!dataset) return undefined;
-    if (chartConfig.type === 'line' || chartConfig.type === 'area' || chartConfig.type === 'scatter') {
+    if (config.type === 'line' || config.type === 'area' || config.type === 'scatter') {
       if (dataset.rowCount > CHART_LIMIT) {
         return `This chart is sampled to ${CHART_LIMIT.toLocaleString()} points for performance.`;
       }
     }
     return undefined;
-  }, [chartConfig.type, dataset]);
+  };
 
   const previewRows = dataset ? dataset.rows.slice(0, 50) : [];
 
   const handleSuggestionApply = (suggestion: ChartSuggestion) => {
-    setChartConfig((prev) => ({ ...prev, ...suggestion.config }));
+    const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    setCharts((prev) => [
+      { id, title: suggestion.title, config: suggestion.config },
+      ...prev,
+    ]);
   };
 
   const handleSheetChange = async (value: string) => {
     if (!currentFile) return;
     await loadFile(currentFile, value);
+  };
+
+  const addChartFromBuilder = () => {
+    if (activeChartId) {
+      setCharts((prev) =>
+        prev.map((chart) =>
+          chart.id === activeChartId
+            ? { ...chart, config: { ...chartConfig } }
+            : chart
+        )
+      );
+      setActiveChartId(null);
+      return;
+    }
+
+    const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const title = `${chartConfig.type.toUpperCase()} chart`;
+    setCharts((prev) => [{ id, title, config: { ...chartConfig } }, ...prev]);
+  };
+
+  const removeChart = (id: string) => {
+    setCharts((prev) => prev.filter((chart) => chart.id !== id));
+    if (activeChartId === id) setActiveChartId(null);
+    if (renamingId === id) setRenamingId(null);
+  };
+
+  const startEditChart = (id: string) => {
+    const chart = charts.find((item) => item.id === id);
+    if (!chart) return;
+    setChartConfig({ ...chart.config });
+    setActiveChartId(id);
+  };
+
+  const cancelEdit = () => {
+    setActiveChartId(null);
+  };
+
+  const handleRenameChange = (id: string, value: string) => {
+    setCharts((prev) => prev.map((chart) => (chart.id === id ? { ...chart, title: value } : chart)));
+  };
+
+  const reorderCharts = (fromId: string, toId: string) => {
+    if (fromId === toId) return;
+    setCharts((prev) => {
+      const fromIndex = prev.findIndex((c) => c.id === fromId);
+      const toIndex = prev.findIndex((c) => c.id === toId);
+      if (fromIndex === -1 || toIndex === -1) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next;
+    });
   };
 
   return (
@@ -265,6 +330,11 @@ export default function Home() {
                 <div className="card p-5">
                   <p className="section-title">Build your chart</p>
                   <h3 className="text-lg font-semibold">Chart builder</h3>
+                  {activeChartId ? (
+                    <div className="mt-2 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-xs text-accent">
+                      Editing an existing chart. Update settings and click “Update selected chart”.
+                    </div>
+                  ) : null}
 
                   <div className="mt-4 space-y-3 text-sm">
                     {dataset.sourceType === 'xlsx' && dataset.sheetNames?.length ? (
@@ -495,12 +565,70 @@ export default function Home() {
                         No numeric columns detected. Charts needing numeric values will be limited.
                       </div>
                     )}
+
+                    <button
+                      type="button"
+                      className="w-full rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white"
+                      onClick={addChartFromBuilder}
+                    >
+                      {activeChartId ? 'Update selected chart' : 'Add chart to dashboard'}
+                    </button>
+                    {activeChartId ? (
+                      <button
+                        type="button"
+                        className="w-full rounded-xl border border-slate/20 px-4 py-2 text-sm font-semibold text-slate/70"
+                        onClick={cancelEdit}
+                      >
+                        Cancel edit
+                      </button>
+                    ) : null}
                   </div>
                 </div>
               </div>
 
               <div className="flex flex-col gap-6">
-                <ChartPanel config={chartConfig} data={chartData} warning={chartWarning} />
+                <div className="card p-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="section-title">Dashboard</p>
+                      <h3 className="text-lg font-semibold">Your charts</h3>
+                    </div>
+                    <span className="text-xs text-slate/60">{charts.length} charts</span>
+                  </div>
+                  {charts.length ? (
+                    <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                      {charts.map((chart) => (
+                        <ChartPanel
+                          key={chart.id}
+                          config={chart.config}
+                          data={buildChartData(chart.config)}
+                          warning={buildChartWarning(chart.config)}
+                          title={chart.title}
+                          onRemove={() => removeChart(chart.id)}
+                          onEdit={() => startEditChart(chart.id)}
+                          isTitleEditing={renamingId === chart.id}
+                          onTitleChange={(value) => handleRenameChange(chart.id, value)}
+                          onTitleBlur={() => setRenamingId(null)}
+                          onStartRename={() => setRenamingId(chart.id)}
+                          draggableProps={{
+                            draggable: true,
+                            onDragStart: () => setDraggingId(chart.id),
+                            onDragEnd: () => setDraggingId(null),
+                            onDragOver: (event) => event.preventDefault(),
+                            onDrop: () => {
+                              if (draggingId) reorderCharts(draggingId, chart.id);
+                              setDraggingId(null);
+                            },
+                          }}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-4 rounded-xl border border-dashed border-slate/20 p-6 text-sm text-slate/60">
+                      No charts yet. Use the builder or click a suggestion to add charts to the dashboard.
+                    </div>
+                  )}
+                </div>
                 <SuggestedCharts suggestions={suggestions} onApply={handleSuggestionApply} />
               </div>
             </div>
