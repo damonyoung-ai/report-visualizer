@@ -35,6 +35,7 @@ export default function ChartPanel({
   isTitleEditing,
   onTitleChange,
   onTitleBlur,
+  onStartRename,
   draggableProps,
 }: {
   config: ChartConfig;
