@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-mist text-ink;
+}
+
+.bg-grid {
+  background-image: radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.08) 1px, transparent 0);
+  background-size: 22px 22px;
+}
+
+.card {
+  @apply rounded-2xl bg-white/80 shadow-sm ring-1 ring-black/5 backdrop-blur;
+}
+
+.section-title {
+  @apply text-sm uppercase tracking-widest text-slate/70;
+}

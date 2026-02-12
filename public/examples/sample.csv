@@ -1,0 +1,9 @@
+Date,Region,Sales,Units,Returned
+2024-01-01,West,12000,45,false
+2024-01-02,West,9000,34,false
+2024-01-03,East,15000,52,true
+2024-01-04,South,7000,28,false
+2024-01-05,North,18000,60,false
+2024-01-06,East,16000,58,true
+2024-01-07,South,8200,30,false
+2024-01-08,North,21000,68,false
