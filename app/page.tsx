@@ -243,7 +243,11 @@ export default function Home() {
     return items;
   };
 
-  const displayColumnName = (name: string) => name.replace(/_\d+$/, '');
+  const normalizeLabel = (value: string) => value.trim().replace(/\s*_\d+$/, '').replace(/\s*\(\d+\)$/, '');
+
+  const displayColumnName = (name: string) => normalizeLabel(name);
+
+  const displayValue = (value: string) => normalizeLabel(value);
 
   const addCategoricalChart = (column: string, type: 'bar' | 'pie') => {
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -861,7 +865,7 @@ export default function Home() {
                         <option value="">Select column</option>
                         {categoryColumns.map((col) => (
                           <option key={col.name} value={col.name}>
-                            {col.name}
+                            {displayColumnName(col.name)}
                           </option>
                         ))}
                       </select>
@@ -877,7 +881,7 @@ export default function Home() {
                           <option value="">Select value</option>
                           {compareOptions.map((option) => (
                             <option key={`a-${option}`} value={option}>
-                              {option}
+                              {displayValue(option)}
                             </option>
                           ))}
                         </select>
@@ -892,7 +896,7 @@ export default function Home() {
                           <option value="">Select value</option>
                           {compareOptions.map((option) => (
                             <option key={`b-${option}`} value={option}>
-                              {option}
+                              {displayValue(option)}
                             </option>
                           ))}
                         </select>
@@ -901,10 +905,10 @@ export default function Home() {
                     {compareStats ? (
                       <div className="rounded-lg border border-slate/10 bg-white p-3 text-xs">
                         <div>
-                          {compareValueA}: {compareStats.countA}
+                          {displayValue(compareValueA)}: {compareStats.countA}
                         </div>
                         <div>
-                          {compareValueB}: {compareStats.countB}
+                          {displayValue(compareValueB)}: {compareStats.countB}
                         </div>
                         <div>
                           Ratio A/B: {compareStats.ratio !== null ? compareStats.ratio.toFixed(2) : '—'}
