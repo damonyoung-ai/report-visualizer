@@ -31,12 +31,23 @@ export type Dataset = {
 
 export type Aggregation = 'sum' | 'avg' | 'min' | 'max' | 'count';
 
-export type ChartType = 'bar' | 'line' | 'area' | 'scatter' | 'pie' | 'histogram';
+export type ChartType =
+  | 'bar'
+  | 'line'
+  | 'area'
+  | 'scatter'
+  | 'pie'
+  | 'histogram'
+  | 'stackedBar'
+  | 'lagHistogram';
 
 export type ChartConfig = {
   type: ChartType;
   xKey?: string;
   yKey?: string;
+  seriesKey?: string;
+  startKey?: string;
+  endKey?: string;
   aggregation?: Aggregation;
   topN?: number;
   colorKey?: string;

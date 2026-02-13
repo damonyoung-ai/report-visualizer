@@ -80,6 +80,29 @@ export function buildHistogram(
   return buckets;
 }
 
+export function buildHistogramFromValues(
+  values: number[],
+  bins = 12
+): { name: string; value: number }[] {
+  const valid = values.filter((value) => Number.isFinite(value));
+  if (!valid.length) return [];
+
+  const min = Math.min(...valid);
+  const max = Math.max(...valid);
+  const width = (max - min) / bins || 1;
+  const buckets = Array.from({ length: bins }, (_, i) => ({
+    name: `${(min + i * width).toFixed(2)} - ${(min + (i + 1) * width).toFixed(2)}`,
+    value: 0,
+  }));
+
+  for (const value of valid) {
+    const idx = Math.min(Math.floor((value - min) / width), bins - 1);
+    buckets[idx].value += 1;
+  }
+
+  return buckets;
+}
+
 export function extractNumericSeries(
   rows: Record<string, unknown>[],
   xKey: string,

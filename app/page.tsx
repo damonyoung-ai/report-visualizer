@@ -14,9 +14,14 @@ import {
   inferColumns,
 } from '../lib/inference';
 import { buildSuggestions } from '../lib/chartSuggestions';
-import { buildHistogram, groupByAggregate, extractScatterSeries } from '../lib/aggregations';
+import {
+  buildHistogram,
+  buildHistogramFromValues,
+  groupByAggregate,
+  extractScatterSeries,
+} from '../lib/aggregations';
 import { downsample } from '../lib/sampling';
-import { ChartConfig, ChartSuggestion, Dataset } from '../types/data';
+import { ChartConfig, ChartSuggestion, ColumnInfo, Dataset } from '../types/data';
 
 const CHART_LIMIT = 5000;
 
@@ -99,6 +104,11 @@ export default function Home() {
           yKey: numericCols[0]?.name ?? prev.yKey,
         }));
       }
+
+      const defaultCharts = buildDefaultDashboard(columns);
+      if (defaultCharts.length) {
+        setCharts(defaultCharts);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to parse file.');
     }
@@ -130,6 +140,106 @@ export default function Home() {
   const suggestedNumeric = detectMostVariantNumeric(columns) ?? numericColumns[0];
   const suggestedCategory = categoryColumns[0];
 
+  const dateSetKey = columns.find((col) => col.name.toLowerCase() === 'date set')?.name;
+  const meetingDateKey = columns.find((col) => col.name.toLowerCase() === 'meeting date')?.name;
+  const sourceKey = columns.find((col) => col.name.toLowerCase() === 'source')?.name;
+  const statusKey = columns.find((col) => col.name.toLowerCase() === 'status')?.name;
+  const brandKey = columns.find((col) => col.name.toLowerCase() === 'brand name')?.name;
+
+  const dateMetrics = useMemo(() => {
+    if (!dataset || !dateSetKey || !meetingDateKey) return null;
+    const lagDays: number[] = [];
+    let minSet: number | null = null;
+    let maxSet: number | null = null;
+    let minMeeting: number | null = null;
+    let maxMeeting: number | null = null;
+    for (const row of dataset.rows) {
+      const setRaw = row[dateSetKey];
+      const meetRaw = row[meetingDateKey];
+      const setDate = setRaw ? new Date(String(setRaw)) : null;
+      const meetDate = meetRaw ? new Date(String(meetRaw)) : null;
+      if (setDate && !Number.isNaN(setDate.getTime())) {
+        const t = setDate.getTime();
+        minSet = minSet === null ? t : Math.min(minSet, t);
+        maxSet = maxSet === null ? t : Math.max(maxSet, t);
+      }
+      if (meetDate && !Number.isNaN(meetDate.getTime())) {
+        const t = meetDate.getTime();
+        minMeeting = minMeeting === null ? t : Math.min(minMeeting, t);
+        maxMeeting = maxMeeting === null ? t : Math.max(maxMeeting, t);
+      }
+      if (setDate && meetDate && !Number.isNaN(setDate.getTime()) && !Number.isNaN(meetDate.getTime())) {
+        const diff = (meetDate.getTime() - setDate.getTime()) / (1000 * 60 * 60 * 24);
+        lagDays.push(diff);
+      }
+    }
+    const avgLag = lagDays.length ? lagDays.reduce((a, b) => a + b, 0) / lagDays.length : null;
+    return {
+      minSet,
+      maxSet,
+      minMeeting,
+      maxMeeting,
+      avgLag,
+    };
+  }, [dataset, dateSetKey, meetingDateKey]);
+
+  const brandMetrics = useMemo(() => {
+    if (!dataset || !brandKey) return null;
+    const counts = new Map<string, number>();
+    for (const row of dataset.rows) {
+      const brand = String(row[brandKey] ?? 'Missing');
+      counts.set(brand, (counts.get(brand) ?? 0) + 1);
+    }
+    const sorted = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+    return {
+      totalBrands: counts.size,
+      topBrand: sorted[0]?.[0],
+      topBrandCount: sorted[0]?.[1],
+    };
+  }, [dataset, brandKey]);
+
+  const buildDefaultDashboard = (cols: ColumnInfo[]) => {
+    const resolvedSource = sourceKey ?? cols.find((col) => col.name.toLowerCase() === 'source')?.name;
+    const resolvedStatus = statusKey ?? cols.find((col) => col.name.toLowerCase() === 'status')?.name;
+    const resolvedBrand = brandKey ?? cols.find((col) => col.name.toLowerCase() === 'brand name')?.name;
+    const resolvedDateSet = dateSetKey ?? cols.find((col) => col.name.toLowerCase() === 'date set')?.name;
+    const resolvedMeeting = meetingDateKey ?? cols.find((col) => col.name.toLowerCase() === 'meeting date')?.name;
+
+    const items: { id: string; title: string; config: ChartConfig }[] = [];
+    const pushChart = (title: string, config: ChartConfig) => {
+      items.push({ id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, title, config });
+    };
+
+    if (resolvedSource) {
+      pushChart('Source counts', { type: 'bar', xKey: resolvedSource, aggregation: 'count', topN: 12, excludeMissing: true });
+      pushChart('Source share %', { type: 'pie', xKey: resolvedSource, aggregation: 'count', topN: 12, excludeMissing: true });
+    }
+    if (resolvedStatus) {
+      pushChart('Status counts', { type: 'bar', xKey: resolvedStatus, aggregation: 'count', topN: 12, excludeMissing: true });
+      pushChart('Status share %', { type: 'pie', xKey: resolvedStatus, aggregation: 'count', topN: 12, excludeMissing: true });
+    }
+    if (resolvedSource && resolvedStatus) {
+      pushChart('Status by Source', { type: 'stackedBar', xKey: resolvedSource, seriesKey: resolvedStatus, topN: 10, excludeMissing: true });
+    }
+    if (resolvedBrand) {
+      pushChart('Top Brands', { type: 'bar', xKey: resolvedBrand, aggregation: 'count', topN: 12, excludeMissing: true });
+      if (resolvedStatus) {
+        pushChart('Brand by Status', { type: 'stackedBar', xKey: resolvedBrand, seriesKey: resolvedStatus, topN: 10, excludeMissing: true });
+      }
+    }
+    if (resolvedDateSet) {
+      pushChart('Date Set volume', { type: 'line', xKey: resolvedDateSet, aggregation: 'count', excludeMissing: true });
+    }
+    if (resolvedMeeting) {
+      pushChart('Meeting Date volume', { type: 'line', xKey: resolvedMeeting, aggregation: 'count', excludeMissing: true });
+    }
+    if (resolvedDateSet && resolvedMeeting) {
+      pushChart('Lag days (Set → Meeting)', { type: 'lagHistogram', startKey: resolvedDateSet, endKey: resolvedMeeting, excludeMissing: true });
+    }
+
+    return items;
+  };
+
   const buildChartData = (config: ChartConfig) => {
     if (!dataset) return [];
     const rows = dataset.rows;
@@ -148,11 +258,11 @@ export default function Home() {
     }
 
     if (config.type === 'line' || config.type === 'area') {
-      if (!config.xKey || !config.yKey) return [];
+      if (!config.xKey) return [];
       const grouped = new Map<string, number[]>();
       for (const row of rows) {
         const x = row[config.xKey];
-        const y = row[config.yKey];
+        const y = config.yKey ? row[config.yKey] : 1;
         if (config.excludeMissing && (x === null || x === undefined || y === null || y === undefined)) continue;
         const key = String(x ?? 'Missing');
         const yNum = typeof y === 'number' ? y : Number(y);
@@ -212,6 +322,49 @@ export default function Home() {
     if (config.type === 'histogram') {
       if (!config.xKey) return [];
       return buildHistogram(rows, config.xKey, 12, config.excludeMissing ?? true);
+    }
+
+    if (config.type === 'stackedBar') {
+      if (!config.xKey || !config.seriesKey) return [];
+      const grouped = new Map<string, Record<string, number>>();
+      const seriesValues = new Set<string>();
+      for (const row of rows) {
+        const groupRaw = row[config.xKey];
+        const seriesRaw = row[config.seriesKey];
+        if (config.excludeMissing && (groupRaw === null || groupRaw === undefined || seriesRaw === null || seriesRaw === undefined)) {
+          continue;
+        }
+        const group = String(groupRaw ?? 'Missing');
+        const series = String(seriesRaw ?? 'Missing');
+        seriesValues.add(series);
+        if (!grouped.has(group)) grouped.set(group, {});
+        const bucket = grouped.get(group)!;
+        bucket[series] = (bucket[series] ?? 0) + 1;
+      }
+      const data = Array.from(grouped.entries()).map(([name, counts]) => ({ name, ...counts }));
+      const topN = config.topN ?? 10;
+      return data
+        .sort((a, b) => {
+          const aSum = Object.values(a).reduce((acc, value) => (typeof value === 'number' ? acc + value : acc), 0);
+          const bSum = Object.values(b).reduce((acc, value) => (typeof value === 'number' ? acc + value : acc), 0);
+          return bSum - aSum;
+        })
+        .slice(0, topN);
+    }
+
+    if (config.type === 'lagHistogram') {
+      if (!config.startKey || !config.endKey) return [];
+      const values: number[] = [];
+      for (const row of rows) {
+        const startRaw = row[config.startKey];
+        const endRaw = row[config.endKey];
+        if (config.excludeMissing && (startRaw === null || startRaw === undefined || endRaw === null || endRaw === undefined)) continue;
+        const start = new Date(String(startRaw));
+        const end = new Date(String(endRaw));
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) continue;
+        values.push((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      }
+      return buildHistogramFromValues(values, 12);
     }
 
     return [];
@@ -326,6 +479,39 @@ export default function Home() {
                   selectedNumeric={suggestedNumeric}
                   selectedCategory={suggestedCategory}
                 />
+                {(dateMetrics || brandMetrics) && (
+                  <div className="card p-5">
+                    <p className="section-title">Additional metrics</p>
+                    <h3 className="text-lg font-semibold">Dates & Brands</h3>
+                    <div className="mt-4 grid gap-3 text-sm">
+                      {dateMetrics ? (
+                        <div className="rounded-xl bg-ink/5 p-3">
+                          <div className="text-xs text-slate/70">Date range</div>
+                          <div className="text-xs">
+                            Set: {dateMetrics.minSet ? new Date(dateMetrics.minSet).toLocaleDateString() : '—'} →{' '}
+                            {dateMetrics.maxSet ? new Date(dateMetrics.maxSet).toLocaleDateString() : '—'}
+                          </div>
+                          <div className="text-xs">
+                            Meeting: {dateMetrics.minMeeting ? new Date(dateMetrics.minMeeting).toLocaleDateString() : '—'} →{' '}
+                            {dateMetrics.maxMeeting ? new Date(dateMetrics.maxMeeting).toLocaleDateString() : '—'}
+                          </div>
+                          <div className="text-xs">
+                            Avg lag: {dateMetrics.avgLag !== null ? `${dateMetrics.avgLag.toFixed(1)} days` : '—'}
+                          </div>
+                        </div>
+                      ) : null}
+                      {brandMetrics ? (
+                        <div className="rounded-xl bg-ink/5 p-3">
+                          <div className="text-xs text-slate/70">Brand metrics</div>
+                          <div className="text-xs">Distinct brands: {brandMetrics.totalBrands}</div>
+                          <div className="text-xs">
+                            Top brand: {brandMetrics.topBrand ?? '—'} ({brandMetrics.topBrandCount ?? 0})
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                )}
 
                 <div className="card p-5">
                   <p className="section-title">Build your chart</p>
@@ -610,6 +796,16 @@ export default function Home() {
                           onTitleChange={(value) => handleRenameChange(chart.id, value)}
                           onTitleBlur={() => setRenamingId(null)}
                           onStartRename={() => setRenamingId(chart.id)}
+                          seriesKeys={
+                            chart.config.type === 'stackedBar' && chart.config.seriesKey
+                              ? Array.from(
+                                  new Set(
+                                    dataset?.rows
+                                      .map((row) => String(row[chart.config.seriesKey!] ?? 'Missing'))
+                                  )
+                                )
+                              : undefined
+                          }
                           draggableProps={{
                             draggable: true,
                             onDragStart: () => setDraggingId(chart.id),

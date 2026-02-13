@@ -37,6 +37,7 @@ export default function ChartPanel({
   onTitleBlur,
   onStartRename,
   draggableProps,
+  seriesKeys,
 }: {
   config: ChartConfig;
   data: any[];
@@ -49,6 +50,7 @@ export default function ChartPanel({
   onTitleBlur?: () => void;
   onStartRename?: () => void;
   draggableProps?: React.HTMLAttributes<HTMLDivElement>;
+  seriesKeys?: string[];
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -143,6 +145,35 @@ export default function ChartPanel({
               <YAxis />
               <Tooltip />
               <Bar dataKey="value" fill={PALETTE[2]} radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        );
+      case 'stackedBar': {
+        const keys = seriesKeys ?? [];
+        return (
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-15} height={60} />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              {keys.map((key, index) => (
+                <Bar key={key} dataKey={key} stackId="stack" fill={PALETTE[index % PALETTE.length]} />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        );
+      }
+      case 'lagHistogram':
+        return (
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-15} height={60} />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="value" fill={PALETTE[3]} radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         );

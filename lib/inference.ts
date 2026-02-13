@@ -31,9 +31,23 @@ function parseBoolean(value: string): boolean | null {
   return null;
 }
 
+function normalizeDateString(value: string): string {
+  const match = value.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})$/);
+  if (!match) return value;
+  const [, m, d, y] = match;
+  if (y.length === 2) {
+    return `${m}/${d}/20${y}`;
+  }
+  if (y.length === 3) {
+    return `${m}/${d}/2${y}`;
+  }
+  return value;
+}
+
 function parseDate(value: string): Date | null {
   if (!DATE_SAMPLE_FORMATS.some((re) => re.test(value))) return null;
-  const parsed = new Date(value);
+  const normalized = normalizeDateString(value);
+  const parsed = new Date(normalized);
   if (Number.isNaN(parsed.getTime())) return null;
   return parsed;
 }
