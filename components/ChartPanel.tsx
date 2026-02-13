@@ -63,6 +63,22 @@ export default function ChartPanel({
     link.click();
   };
 
+  const getChartWidth = () => {
+    const count = Array.isArray(data) ? data.length : 0;
+    if (!count) return 640;
+    if (['bar', 'histogram', 'stackedBar', 'lagHistogram'].includes(config.type)) {
+      return Math.max(640, count * 80);
+    }
+    return 640;
+  };
+
+  const tickFormatter = (value: string | number) => {
+    const text = String(value);
+    return text.length > 14 ? `${text.slice(0, 12)}…` : text;
+  };
+
+  const chartWidth = getChartWidth();
+
   const renderChart = (type: ChartType) => {
     if (!data.length) {
       return <div className="text-sm text-slate/60">No data available for this chart.</div>;
@@ -71,10 +87,10 @@ export default function ChartPanel({
     switch (type) {
       case 'bar':
         return (
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+          <ResponsiveContainer width="100%" height={360}>
+            <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} interval={0} angle={-15} height={60} />
+              <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-20} height={70} tickFormatter={tickFormatter} />
               <YAxis />
               <Tooltip />
               <Bar dataKey="value" fill={PALETTE[0]} radius={[6, 6, 0, 0]} />
@@ -83,10 +99,10 @@ export default function ChartPanel({
         );
       case 'line':
         return (
-          <ResponsiveContainer width="100%" height={320}>
+          <ResponsiveContainer width="100%" height={360}>
             <LineChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="x" tick={{ fontSize: 12 }} />
+              <XAxis dataKey="x" tick={{ fontSize: 11 }} tickFormatter={tickFormatter} />
               <YAxis />
               <Tooltip />
               <Line type="monotone" dataKey="y" stroke={PALETTE[0]} strokeWidth={2} dot={false} />
@@ -95,10 +111,10 @@ export default function ChartPanel({
         );
       case 'area':
         return (
-          <ResponsiveContainer width="100%" height={320}>
+          <ResponsiveContainer width="100%" height={360}>
             <AreaChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="x" tick={{ fontSize: 12 }} />
+              <XAxis dataKey="x" tick={{ fontSize: 11 }} tickFormatter={tickFormatter} />
               <YAxis />
               <Tooltip />
               <Area type="monotone" dataKey="y" stroke={PALETTE[1]} fill={PALETTE[1]} fillOpacity={0.3} />
@@ -107,10 +123,10 @@ export default function ChartPanel({
         );
       case 'scatter':
         return (
-          <ResponsiveContainer width="100%" height={320}>
+          <ResponsiveContainer width="100%" height={360}>
             <ScatterChart margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="x" type="number" tick={{ fontSize: 12 }} />
+              <XAxis dataKey="x" type="number" tick={{ fontSize: 11 }} />
               <YAxis dataKey="y" type="number" />
               <Tooltip cursor={{ strokeDasharray: '3 3' }} />
               <Legend />
@@ -124,7 +140,7 @@ export default function ChartPanel({
         );
       case 'pie':
         return (
-          <ResponsiveContainer width="100%" height={320}>
+          <ResponsiveContainer width="100%" height={360}>
             <PieChart>
               <Tooltip />
               <Legend />
@@ -138,10 +154,10 @@ export default function ChartPanel({
         );
       case 'histogram':
         return (
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+          <ResponsiveContainer width="100%" height={360}>
+            <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-15} height={60} />
+              <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-20} height={70} tickFormatter={tickFormatter} />
               <YAxis />
               <Tooltip />
               <Bar dataKey="value" fill={PALETTE[2]} radius={[6, 6, 0, 0]} />
@@ -151,10 +167,10 @@ export default function ChartPanel({
       case 'stackedBar': {
         const keys = seriesKeys ?? [];
         return (
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+          <ResponsiveContainer width="100%" height={360}>
+            <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-15} height={60} />
+              <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-20} height={70} tickFormatter={tickFormatter} />
               <YAxis />
               <Tooltip />
               <Legend />
@@ -167,10 +183,10 @@ export default function ChartPanel({
       }
       case 'lagHistogram':
         return (
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+          <ResponsiveContainer width="100%" height={360}>
+            <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-15} height={60} />
+              <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-20} height={70} tickFormatter={tickFormatter} />
               <YAxis />
               <Tooltip />
               <Bar dataKey="value" fill={PALETTE[3]} radius={[6, 6, 0, 0]} />
@@ -238,7 +254,9 @@ export default function ChartPanel({
       </div>
       {warning ? <div className="mt-3 text-xs text-warning">{warning}</div> : null}
       <div ref={ref} className="mt-4 rounded-xl bg-white p-3">
-        {renderChart(config.type)}
+        <div className="overflow-x-auto">
+          <div style={{ width: chartWidth, minWidth: '100%' }}>{renderChart(config.type)}</div>
+        </div>
       </div>
     </div>
   );

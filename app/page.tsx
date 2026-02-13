@@ -243,9 +243,11 @@ export default function Home() {
     return items;
   };
 
+  const displayColumnName = (name: string) => name.replace(/_\d+$/, '');
+
   const addCategoricalChart = (column: string, type: 'bar' | 'pie') => {
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    const title = `${type === 'bar' ? 'Count by' : 'Share of'} ${column}`;
+    const title = `${type === 'bar' ? 'Count by' : 'Share of'} ${displayColumnName(column)}`;
     setCharts((prev) => [
       { id, title, config: { type, xKey: column, aggregation: 'count', topN: 12, excludeMissing: true } },
       ...prev,
@@ -816,7 +818,7 @@ export default function Home() {
                     {categoryColumns.length ? (
                       categoryColumns.map((col) => (
                         <div key={col.name} className="rounded-lg border border-slate/10 p-3">
-                          <div className="text-xs font-semibold">{col.name}</div>
+                          <div className="text-xs font-semibold">{displayColumnName(col.name)}</div>
                           <div className="mt-2 flex gap-2">
                             <button
                               type="button"
@@ -926,41 +928,48 @@ export default function Home() {
                   </div>
                   {charts.length ? (
                     <div className="mt-4 grid gap-4 lg:grid-cols-2">
-                      {charts.map((chart) => (
-                        <ChartPanel
-                          key={chart.id}
-                          config={chart.config}
-                          data={buildChartData(chart.config)}
-                          warning={buildChartWarning(chart.config)}
-                          title={chart.title}
-                          onRemove={() => removeChart(chart.id)}
-                          onEdit={() => startEditChart(chart.id)}
-                          isTitleEditing={renamingId === chart.id}
-                          onTitleChange={(value) => handleRenameChange(chart.id, value)}
-                          onTitleBlur={() => setRenamingId(null)}
-                          onStartRename={() => setRenamingId(chart.id)}
-                          seriesKeys={
-                            chart.config.type === 'stackedBar' && chart.config.seriesKey
-                              ? Array.from(
-                                  new Set(
-                                    dataset?.rows
-                                      .map((row) => String(row[chart.config.seriesKey!] ?? 'Missing'))
-                                  )
-                                )
-                              : undefined
-                          }
-                          draggableProps={{
-                            draggable: true,
-                            onDragStart: () => setDraggingId(chart.id),
-                            onDragEnd: () => setDraggingId(null),
-                            onDragOver: (event) => event.preventDefault(),
-                            onDrop: () => {
-                              if (draggingId) reorderCharts(draggingId, chart.id);
-                              setDraggingId(null);
-                            },
-                          }}
-                        />
-                      ))}
+                      {charts.map((chart) => {
+                        const data = buildChartData(chart.config);
+                        const isWide =
+                          ['bar', 'histogram', 'stackedBar', 'lagHistogram'].includes(chart.config.type) &&
+                          data.length > 6;
+                        return (
+                          <div key={chart.id} className={isWide ? 'lg:col-span-2' : ''}>
+                            <ChartPanel
+                              config={chart.config}
+                              data={data}
+                              warning={buildChartWarning(chart.config)}
+                              title={chart.title}
+                              onRemove={() => removeChart(chart.id)}
+                              onEdit={() => startEditChart(chart.id)}
+                              isTitleEditing={renamingId === chart.id}
+                              onTitleChange={(value) => handleRenameChange(chart.id, value)}
+                              onTitleBlur={() => setRenamingId(null)}
+                              onStartRename={() => setRenamingId(chart.id)}
+                              seriesKeys={
+                                chart.config.type === 'stackedBar' && chart.config.seriesKey
+                                  ? Array.from(
+                                      new Set(
+                                        dataset?.rows
+                                          .map((row) => String(row[chart.config.seriesKey!] ?? 'Missing'))
+                                      )
+                                    )
+                                  : undefined
+                              }
+                              draggableProps={{
+                                draggable: true,
+                                onDragStart: () => setDraggingId(chart.id),
+                                onDragEnd: () => setDraggingId(null),
+                                onDragOver: (event) => event.preventDefault(),
+                                onDrop: () => {
+                                  if (draggingId) reorderCharts(draggingId, chart.id);
+                                  setDraggingId(null);
+                                },
+                              }}
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="mt-4 rounded-xl border border-dashed border-slate/20 p-6 text-sm text-slate/60">
