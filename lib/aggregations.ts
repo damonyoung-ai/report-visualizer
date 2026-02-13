@@ -1,143 +1,116 @@
-import { Aggregation } from '../types/data';
+import { CanonicalRow, Filters } from '../types/sqo';
+import { getDayOfWeek, getIsoWeek, getMonthKey } from './dateUtils';
 
-function isMissing(value: unknown): boolean {
-  return value === null || value === undefined || value === '' || Number.isNaN(value);
-}
+const normalize = (value: string | null) => (value && value.trim() ? value.trim() : null);
 
-export function aggregateValues(values: number[], aggregation: Aggregation): number {
-  if (aggregation === 'count') return values.length;
-  if (!values.length) return 0;
-  if (aggregation === 'sum') return values.reduce((a, b) => a + b, 0);
-  if (aggregation === 'avg') return values.reduce((a, b) => a + b, 0) / values.length;
-  if (aggregation === 'min') return Math.min(...values);
-  if (aggregation === 'max') return Math.max(...values);
-  return values.length;
-}
-
-export function groupByAggregate(
-  rows: Record<string, unknown>[],
-  categoryKey: string,
-  numericKey: string | undefined,
-  aggregation: Aggregation,
-  excludeMissing: boolean
-): { name: string; value: number; count: number }[] {
-  const groups = new Map<string, number[]>();
-
-  for (const row of rows) {
-    const rawCategory = row[categoryKey];
-    if (excludeMissing && isMissing(rawCategory)) continue;
-    const category = String(rawCategory ?? 'Missing');
-    const numRaw = numericKey ? row[numericKey] : null;
-
-    if (!groups.has(category)) groups.set(category, []);
-    if (numericKey) {
-      const num = typeof numRaw === 'number' ? numRaw : Number(numRaw);
-      if (!Number.isFinite(num)) {
-        if (!excludeMissing) groups.get(category)?.push(0);
-      } else {
-        groups.get(category)?.push(num);
-      }
-    } else {
-      groups.get(category)?.push(1);
+export function applyFilters(rows: CanonicalRow[], filters: Filters) {
+  return rows.filter((row) => {
+    if (filters.excludeMissing) {
+      if (!row.meetingDate || !row.source || !row.status || !row.ae) return false;
     }
-  }
 
-  const results = Array.from(groups.entries()).map(([name, values]) => {
-    const value = aggregation === 'count' || !numericKey ? values.length : aggregateValues(values, aggregation);
-    return { name, value, count: values.length };
+    if (filters.dateFrom || filters.dateTo) {
+      if (!row.meetingDate) return false;
+      if (filters.dateFrom && row.meetingDate < new Date(filters.dateFrom)) return false;
+      if (filters.dateTo) {
+        const to = new Date(filters.dateTo);
+        to.setHours(23, 59, 59, 999);
+        if (row.meetingDate > to) return false;
+      }
+    }
+
+    if (filters.sources.length && (!row.source || !filters.sources.includes(row.source))) return false;
+    if (filters.statuses.length && (!row.status || !filters.statuses.includes(row.status))) return false;
+    if (filters.aes.length && (!row.ae || !filters.aes.includes(row.ae))) return false;
+
+    return true;
   });
-
-  return results.sort((a, b) => b.value - a.value);
 }
 
-export function buildHistogram(
-  rows: Record<string, unknown>[],
-  numericKey: string,
-  bins = 12,
-  excludeMissing = true
-): { name: string; value: number }[] {
-  const values = rows
-    .map((row) => row[numericKey])
-    .filter((value) => !(excludeMissing && isMissing(value)))
-    .map((value) => (typeof value === 'number' ? value : Number(value)))
-    .filter((value) => Number.isFinite(value));
+export function countBy(rows: CanonicalRow[], key: 'source' | 'status' | 'ae') {
+  const map = new Map<string, number>();
+  rows.forEach((row) => {
+    const value = normalize(row[key]);
+    if (!value) return;
+    map.set(value, (map.get(value) ?? 0) + 1);
+  });
+  return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+}
 
-  if (!values.length) return [];
-
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const width = (max - min) / bins || 1;
-  const buckets = Array.from({ length: bins }, (_, i) => ({
-    name: `${(min + i * width).toFixed(2)} - ${(min + (i + 1) * width).toFixed(2)}`,
-    value: 0,
+export function ratioTable(rows: CanonicalRow[], key: 'status' | 'source' | 'ae') {
+  const counts = countBy(rows, key);
+  const total = counts.reduce((acc, [, count]) => acc + count, 0) || 1;
+  return counts.map(([label, count]) => ({
+    label,
+    count,
+    ratio: count / total,
   }));
-
-  for (const value of values) {
-    const idx = Math.min(Math.floor((value - min) / width), bins - 1);
-    buckets[idx].value += 1;
-  }
-
-  return buckets;
 }
 
-export function buildHistogramFromValues(
-  values: number[],
-  bins = 12
-): { name: string; value: number }[] {
-  const valid = values.filter((value) => Number.isFinite(value));
-  if (!valid.length) return [];
-
-  const min = Math.min(...valid);
-  const max = Math.max(...valid);
-  const width = (max - min) / bins || 1;
-  const buckets = Array.from({ length: bins }, (_, i) => ({
-    name: `${(min + i * width).toFixed(2)} - ${(min + (i + 1) * width).toFixed(2)}`,
-    value: 0,
-  }));
-
-  for (const value of valid) {
-    const idx = Math.min(Math.floor((value - min) / width), bins - 1);
-    buckets[idx].value += 1;
-  }
-
-  return buckets;
+export function rollupStatus(rows: CanonicalRow[]) {
+  let complete = 0;
+  let notComplete = 0;
+  rows.forEach((row) => {
+    const status = normalize(row.status) ?? '';
+    if (status.toLowerCase().startsWith('mtg. complete')) complete += 1;
+    else notComplete += 1;
+  });
+  const total = complete + notComplete || 1;
+  return [
+    { label: 'Mtg. Complete', count: complete, ratio: complete / total },
+    { label: 'Not Complete', count: notComplete, ratio: notComplete / total },
+  ];
 }
 
-export function extractNumericSeries(
-  rows: Record<string, unknown>[],
-  xKey: string,
-  yKey: string,
-  excludeMissing: boolean
-): { x: string | number; y: number }[] {
-  const series: { x: string | number; y: number }[] = [];
-  for (const row of rows) {
-    const x = row[xKey];
-    const yRaw = row[yKey];
-    if (excludeMissing && (isMissing(x) || isMissing(yRaw))) continue;
-    const y = typeof yRaw === 'number' ? yRaw : Number(yRaw);
-    if (!Number.isFinite(y)) continue;
-    series.push({ x: x as string | number, y });
+export function topNWithOther(items: [string, number][], topN: number) {
+  const top = items.slice(0, topN);
+  const rest = items.slice(topN);
+  const otherCount = rest.reduce((acc, [, count]) => acc + count, 0);
+  if (otherCount > 0) {
+    top.push(['Other', otherCount]);
+  }
+  return top;
+}
+
+export function meetingDateSeries(rows: CanonicalRow[], groupBy: 'week' | 'month', includeMissing: boolean) {
+  const map = new Map<string, number>();
+  let missing = 0;
+  rows.forEach((row) => {
+    if (!row.meetingDate) {
+      if (includeMissing) missing += 1;
+      return;
+    }
+    const key = groupBy === 'week' ? getIsoWeek(row.meetingDate) : getMonthKey(row.meetingDate);
+    map.set(key, (map.get(key) ?? 0) + 1);
+  });
+  const series = Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0])).map(([x, y]) => ({ x, y }));
+  if (includeMissing && missing) {
+    series.push({ x: 'Missing', y: missing });
   }
   return series;
 }
 
-export function extractScatterSeries(
-  rows: Record<string, unknown>[],
-  xKey: string,
-  yKey: string,
-  colorKey?: string,
-  excludeMissing = true
-): { x: number; y: number; category?: string }[] {
-  const points: { x: number; y: number; category?: string }[] = [];
-  for (const row of rows) {
-    const xRaw = row[xKey];
-    const yRaw = row[yKey];
-    if (excludeMissing && (isMissing(xRaw) || isMissing(yRaw))) continue;
-    const x = typeof xRaw === 'number' ? xRaw : Number(xRaw);
-    const y = typeof yRaw === 'number' ? yRaw : Number(yRaw);
-    if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
-    const category = colorKey ? String(row[colorKey] ?? 'Missing') : undefined;
-    points.push({ x, y, category });
-  }
-  return points;
+export function dayOfWeekDistribution(rows: CanonicalRow[]) {
+  const order = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const map = new Map<string, number>(order.map((day) => [day, 0]));
+  rows.forEach((row) => {
+    if (!row.meetingDate) return;
+    const day = getDayOfWeek(row.meetingDate);
+    map.set(day, (map.get(day) ?? 0) + 1);
+  });
+  return order.map((day) => ({ name: day, value: map.get(day) ?? 0 }));
+}
+
+export function stackByStatus(rows: CanonicalRow[], topStatuses: string[]) {
+  const grouped = new Map<string, Record<string, number>>();
+  rows.forEach((row) => {
+    if (!row.ae) return;
+    const ae = row.ae;
+    if (!grouped.has(ae)) grouped.set(ae, {});
+    const status = row.status ?? 'Missing';
+    const key = topStatuses.includes(status) ? status : 'Other';
+    const bucket = grouped.get(ae)!;
+    bucket[key] = (bucket[key] ?? 0) + 1;
+  });
+  return Array.from(grouped.entries()).map(([name, counts]) => ({ name, ...counts }));
 }

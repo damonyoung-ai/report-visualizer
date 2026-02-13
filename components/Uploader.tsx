@@ -1,35 +1,26 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 const ACCEPTED = ['.csv', '.xlsx'];
 
 type Props = {
   onFileSelected: (file: File) => void;
-  onExample?: (path: string) => void;
   error?: string | null;
+  onExample?: (path: string) => void;
 };
 
-export default function Uploader({ onFileSelected, onExample, error }: Props) {
+export default function Uploader({ onFileSelected, error, onExample }: Props) {
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleFiles = useCallback(
-    (files: FileList | null) => {
-      if (!files || !files[0]) return;
-      onFileSelected(files[0]);
-    },
-    [onFileSelected]
-  );
-
-  const onDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setDragging(false);
-    handleFiles(event.dataTransfer.files);
+  const handleFiles = (files: FileList | null) => {
+    if (!files || !files[0]) return;
+    onFileSelected(files[0]);
   };
 
   return (
-    <div className="card p-6 bg-white">
+    <div className="card p-6">
       <div
         className={`rounded-2xl border-2 border-dashed p-8 text-center transition ${
           dragging ? 'border-accent bg-accent/5' : 'border-slate/20'
@@ -39,11 +30,15 @@ export default function Uploader({ onFileSelected, onExample, error }: Props) {
           setDragging(true);
         }}
         onDragLeave={() => setDragging(false)}
-        onDrop={onDrop}
+        onDrop={(event) => {
+          event.preventDefault();
+          setDragging(false);
+          handleFiles(event.dataTransfer.files);
+        }}
       >
-        <h2 className="text-2xl font-semibold">Upload your data file</h2>
+        <h2 className="text-2xl font-semibold">Upload SQO report</h2>
         <p className="mt-2 text-sm text-slate/70">
-          Drag and drop a CSV or XLSX file, or click to browse. Files are parsed locally in your browser.
+          Drag and drop a CSV or XLSX export. We will auto-detect headers and clean the file for you.
         </p>
         <button
           type="button"
@@ -62,13 +57,9 @@ export default function Uploader({ onFileSelected, onExample, error }: Props) {
         {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
         {onExample ? (
           <div className="mt-5 text-xs text-slate/70">
-            Try examples:{' '}
-            <button className="underline" onClick={() => onExample('/examples/sample.csv')}>
-              sample.csv
-            </button>{' '}
-            ·{' '}
-            <button className="underline" onClick={() => onExample('/examples/sample.xlsx')}>
-              sample.xlsx
+            Try example:{' '}
+            <button className="underline" onClick={() => onExample('/examples/example.csv')}>
+              example.csv
             </button>
           </div>
         ) : null}

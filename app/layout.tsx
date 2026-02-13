@@ -5,8 +5,8 @@ import './globals.css';
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Report Visualizer',
-  description: 'Upload CSV/XLSX files and generate charts instantly.'
+  title: 'SQO Report Visualizer',
+  description: 'Upload CSV/XLSX and get an instant SQO dashboard.'
 };
 
 export default function RootLayout({

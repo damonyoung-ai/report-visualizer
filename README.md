@@ -1,22 +1,21 @@
-# Report Visualizer
+# SQO Report Visualizer
 
-A production-ready Next.js 14 web app that lets users upload a CSV or XLSX file and automatically generates visual reports (charts/graphs) directly in the browser.
+A production-ready Next.js 14 app that lets you upload a CSV/XLSX report and instantly generates a dashboard focused on **Source**, **Status**, **Meeting Date**, and **A.E.**. Everything runs client-side.
 
 ## Features
-- Drag & drop uploader for `.csv` and `.xlsx`
-- Client-side parsing with PapaParse and SheetJS
-- Type inference (number, date, boolean, category/string)
-- Schema summary + KPIs
-- Suggested charts + custom chart builder
-- Data preview table (first 50 rows, sortable)
-- Chart export to PNG
-- XLSX sheet selector
+- Auto-detects the correct header row (handles title rows + Google Sheets exports)
+- Cleans empty/unnamed columns
+- Normalizes column names to canonical keys
+- Dashboard with KPIs, charts, and ratios
+- Global filters for Meeting Date, Source, Status, A.E.
+- Download cleaned CSV
+- Export dashboard as PNG
 
 ## Tech Stack
 - Next.js 14 (App Router) + TypeScript
 - Tailwind CSS
 - Recharts
-- PapaParse + SheetJS
+- PapaParse + SheetJS (xlsx)
 
 ## Local Development
 ```bash
@@ -31,38 +30,40 @@ npm run build
 npm start
 ```
 
-## Example Data
-Sample files are located in `public/examples`:
-- `public/examples/sample.csv`
-- `public/examples/sample.xlsx`
+## Git Setup + Commit
+```bash
+git init
+git add .
+git commit -m "Initial SQO report visualizer"
+```
 
-## Deployment (Vercel)
-### CLI
+## Push to GitHub
+HTTPS:
+```bash
+git remote add origin https://github.com/<YOUR_USER>/<YOUR_REPO>.git
+git push -u origin main
+```
+
+SSH:
+```bash
+git remote add origin git@github.com:<YOUR_USER>/<YOUR_REPO>.git
+git push -u origin main
+```
+
+## Deploy to Vercel
+CLI:
 ```bash
 npm i -g vercel
 vercel
 vercel --prod
 ```
 
-### Dashboard
-1. Create a new project at Vercel.
-2. Import your GitHub repo.
-3. Keep defaults (Next.js framework detected).
-4. Deploy.
+Dashboard:
+1. Create a new project on Vercel
+2. Import your GitHub repo
+3. Keep defaults (Next.js detected)
+4. Deploy
 
-## GitHub Setup
-```bash
-git init
-git add .
-git commit -m "Initial report visualizer"
-```
-Then create a repo on GitHub and push.
-
-## Limitations & Performance Notes
-- Parsing and charts run entirely in browser memory.
-- For datasets larger than ~200k rows, charts are sampled to maintain performance.
+## Notes
+- For large datasets (~200k rows), charts are computed with memoized aggregations and only the line chart may be downsampled if needed.
 - Preview table is limited to the first 50 rows.
-
-## Environment
-- No API keys are required. Do not store secrets in source control.
-- If you add secrets later, use `.env`.

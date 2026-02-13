@@ -16,9 +16,21 @@ body {
 }
 
 .card {
-  @apply rounded-2xl bg-white/80 shadow-sm ring-1 ring-black/5 backdrop-blur;
+  @apply rounded-2xl bg-white/90 shadow-sm ring-1 ring-black/5 backdrop-blur;
 }
 
 .section-title {
-  @apply text-sm uppercase tracking-widest text-slate/70;
+  @apply text-xs uppercase tracking-widest text-slate/60;
+}
+
+.input {
+  @apply rounded-lg border border-slate/20 px-3 py-2 text-sm;
+}
+
+.button {
+  @apply rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white;
+}
+
+.button-outline {
+  @apply rounded-xl border border-slate/20 px-4 py-2 text-sm font-semibold text-slate/70;
 }
