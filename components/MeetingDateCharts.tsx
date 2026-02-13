@@ -39,7 +39,7 @@ export default function MeetingDateCharts({
           <LineChart data={series} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
             <XAxis dataKey="x" tick={{ fontSize: 11 }} />
             <YAxis />
-            <Tooltip />
+            <Tooltip cursor={false} />
             <Line type="monotone" dataKey="y" stroke="#1f6feb" strokeWidth={2} dot={false} isAnimationActive />
           </LineChart>
         </ResponsiveContainer>
@@ -50,7 +50,7 @@ export default function MeetingDateCharts({
           <BarChart data={dayOfWeek} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
             <XAxis dataKey="name" tick={{ fontSize: 11 }} />
             <YAxis />
-            <Tooltip />
+            <Tooltip cursor={false} />
             <Bar dataKey="value" fill="#12b981" radius={[6, 6, 0, 0]} isAnimationActive />
           </BarChart>
         </ResponsiveContainer>

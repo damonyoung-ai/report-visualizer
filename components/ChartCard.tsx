@@ -27,7 +27,7 @@ export default function ChartCard({ title, subtitle, children }: { title: string
         </button>
       </div>
       <div ref={ref} className="mt-4 rounded-xl bg-white p-3">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-xl border border-slate/10">
           <div className="min-w-full">{children}</div>
         </div>
       </div>

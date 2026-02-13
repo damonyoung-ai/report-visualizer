@@ -30,7 +30,7 @@ export default function AeCharts({ rows }: { rows: CanonicalRow[] }) {
                 tickMargin={10}
               />
               <YAxis />
-              <Tooltip />
+              <Tooltip cursor={false} />
               <Bar dataKey="value" fill={COLORS[1]} radius={[6, 6, 0, 0]} isAnimationActive />
             </BarChart>
           </ResponsiveContainer>
@@ -50,7 +50,7 @@ export default function AeCharts({ rows }: { rows: CanonicalRow[] }) {
                 tickMargin={10}
               />
               <YAxis />
-              <Tooltip />
+              <Tooltip cursor={false} />
               <Legend />
               {topStatuses.map((status, idx) => (
                 <Bar key={status} dataKey={status} stackId="stack" fill={COLORS[idx % COLORS.length]} isAnimationActive />

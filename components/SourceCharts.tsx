@@ -45,7 +45,7 @@ export default function SourceCharts({
                 tickMargin={10}
               />
               <YAxis />
-              <Tooltip />
+              <Tooltip cursor={false} />
               <Bar dataKey="value" fill={COLORS[0]} radius={[6, 6, 0, 0]} isAnimationActive />
             </BarChart>
           </ResponsiveContainer>
@@ -55,7 +55,7 @@ export default function SourceCharts({
       <ChartCard title="Source share" subtitle="Source">
         <ResponsiveContainer width="100%" height={320}>
           <PieChart>
-            <Tooltip />
+            <Tooltip cursor={false} />
             <Pie
               data={trimmed}
               dataKey="value"

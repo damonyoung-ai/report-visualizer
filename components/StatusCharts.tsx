@@ -46,7 +46,7 @@ export default function StatusCharts({
                   tickMargin={10}
                 />
                 <YAxis />
-                <Tooltip />
+                <Tooltip cursor={false} />
                 <Bar dataKey="value" fill={COLORS[2]} radius={[6, 6, 0, 0]} isAnimationActive />
               </BarChart>
             </ResponsiveContainer>
@@ -56,7 +56,7 @@ export default function StatusCharts({
         <ChartCard title="Status ratios" subtitle="Status">
           <ResponsiveContainer width="100%" height={320}>
             <PieChart>
-              <Tooltip />
+              <Tooltip cursor={false} />
               <Pie
                 data={barData}
                 dataKey="value"
