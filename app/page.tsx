@@ -41,6 +41,9 @@ export default function Home() {
   const [activeChartId, setActiveChartId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [compareColumn, setCompareColumn] = useState<string>('');
+  const [compareValueA, setCompareValueA] = useState<string>('');
+  const [compareValueB, setCompareValueB] = useState<string>('');
 
   const [activeSheet, setActiveSheet] = useState<string | undefined>(undefined);
 
@@ -240,6 +243,15 @@ export default function Home() {
     return items;
   };
 
+  const addCategoricalChart = (column: string, type: 'bar' | 'pie') => {
+    const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const title = `${type === 'bar' ? 'Count by' : 'Share of'} ${column}`;
+    setCharts((prev) => [
+      { id, title, config: { type, xKey: column, aggregation: 'count', topN: 12, excludeMissing: true } },
+      ...prev,
+    ]);
+  };
+
   const buildChartData = (config: ChartConfig) => {
     if (!dataset) return [];
     const rows = dataset.rows;
@@ -395,6 +407,31 @@ export default function Home() {
     if (!currentFile) return;
     await loadFile(currentFile, value);
   };
+
+  const compareOptions = useMemo(() => {
+    if (!dataset || !compareColumn) return [];
+    const values = new Set<string>();
+    for (const row of dataset.rows) {
+      const value = row[compareColumn];
+      if (value === null || value === undefined || value === '') continue;
+      values.add(String(value));
+    }
+    return Array.from(values).sort((a, b) => a.localeCompare(b)).slice(0, 50);
+  }, [compareColumn, dataset]);
+
+  const compareStats = useMemo(() => {
+    if (!dataset || !compareColumn) return null;
+    if (!compareValueA || !compareValueB) return null;
+    let countA = 0;
+    let countB = 0;
+    for (const row of dataset.rows) {
+      const value = String(row[compareColumn] ?? '');
+      if (value === compareValueA) countA += 1;
+      if (value === compareValueB) countB += 1;
+    }
+    const ratio = countB ? countA / countB : null;
+    return { countA, countB, ratio };
+  }, [compareColumn, compareValueA, compareValueB, dataset]);
 
   const addChartFromBuilder = () => {
     if (activeChartId) {
@@ -769,6 +806,111 @@ export default function Home() {
                         Cancel edit
                       </button>
                     ) : null}
+                  </div>
+                </div>
+
+                <div className="card p-5">
+                  <p className="section-title">Categorical quick charts</p>
+                  <h3 className="text-lg font-semibold">Compare categories</h3>
+                  <div className="mt-4 space-y-3 text-sm">
+                    {categoryColumns.length ? (
+                      categoryColumns.map((col) => (
+                        <div key={col.name} className="rounded-lg border border-slate/10 p-3">
+                          <div className="text-xs font-semibold">{col.name}</div>
+                          <div className="mt-2 flex gap-2">
+                            <button
+                              type="button"
+                              className="rounded-full border border-slate/20 px-3 py-1 text-xs font-semibold"
+                              onClick={() => addCategoricalChart(col.name, 'bar')}
+                            >
+                              Count
+                            </button>
+                            <button
+                              type="button"
+                              className="rounded-full border border-slate/20 px-3 py-1 text-xs font-semibold"
+                              onClick={() => addCategoricalChart(col.name, 'pie')}
+                            >
+                              Share %
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-xs text-slate/60">No categorical columns detected.</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="card p-5">
+                  <p className="section-title">Value comparison</p>
+                  <h3 className="text-lg font-semibold">Compare two values</h3>
+                  <div className="mt-4 space-y-3 text-sm">
+                    <label className="flex flex-col gap-1">
+                      <span className="text-xs text-slate/70">Category column</span>
+                      <select
+                        className="rounded-lg border border-slate/20 px-3 py-2"
+                        value={compareColumn}
+                        onChange={(event) => {
+                          setCompareColumn(event.target.value);
+                          setCompareValueA('');
+                          setCompareValueB('');
+                        }}
+                      >
+                        <option value="">Select column</option>
+                        {categoryColumns.map((col) => (
+                          <option key={col.name} value={col.name}>
+                            {col.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="flex flex-col gap-1">
+                        <span className="text-xs text-slate/70">Value A</span>
+                        <select
+                          className="rounded-lg border border-slate/20 px-3 py-2"
+                          value={compareValueA}
+                          onChange={(event) => setCompareValueA(event.target.value)}
+                        >
+                          <option value="">Select value</option>
+                          {compareOptions.map((option) => (
+                            <option key={`a-${option}`} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="flex flex-col gap-1">
+                        <span className="text-xs text-slate/70">Value B</span>
+                        <select
+                          className="rounded-lg border border-slate/20 px-3 py-2"
+                          value={compareValueB}
+                          onChange={(event) => setCompareValueB(event.target.value)}
+                        >
+                          <option value="">Select value</option>
+                          {compareOptions.map((option) => (
+                            <option key={`b-${option}`} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                    {compareStats ? (
+                      <div className="rounded-lg border border-slate/10 bg-white p-3 text-xs">
+                        <div>
+                          {compareValueA}: {compareStats.countA}
+                        </div>
+                        <div>
+                          {compareValueB}: {compareStats.countB}
+                        </div>
+                        <div>
+                          Ratio A/B: {compareStats.ratio !== null ? compareStats.ratio.toFixed(2) : '—'}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-xs text-slate/60">Pick two values to compare counts.</div>
+                    )}
                   </div>
                 </div>
               </div>
