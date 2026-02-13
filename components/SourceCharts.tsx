@@ -35,7 +35,7 @@ export default function SourceCharts({
     return (
       <g transform={`translate(${x},${y + 10})`}>
         {lines.slice(0, 3).map((text, index) => (
-          <text key={index} x={0} y={index * 12} textAnchor=\"middle\" fontSize={11} fill=\"#475569\">
+          <text key={index} x={0} y={index * 12} textAnchor="middle" fontSize={11} fill="#475569">
             {text}
           </text>
         ))}
