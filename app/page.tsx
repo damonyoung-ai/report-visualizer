@@ -328,9 +328,10 @@ export default function Home() {
       if (!config.xKey || !config.seriesKey) return [];
       const grouped = new Map<string, Record<string, number>>();
       const seriesValues = new Set<string>();
+      const seriesKey: string = config.seriesKey;
       for (const row of rows) {
-        const groupRaw = row[config.xKey];
-        const seriesRaw = row[config.seriesKey];
+        const groupRaw: unknown = row[config.xKey];
+        const seriesRaw: unknown = row[seriesKey];
         if (config.excludeMissing && (groupRaw === null || groupRaw === undefined || seriesRaw === null || seriesRaw === undefined)) {
           continue;
         }
