@@ -20,11 +20,18 @@ export default function AeCharts({ rows }: { rows: CanonicalRow[] }) {
       <ChartCard title="A.E. counts" subtitle="A.E.">
         <div style={{ width: Math.max(640, trimmedAe.length * 80) }}>
           <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={trimmedAe} margin={{ top: 10, right: 20, left: 0, bottom: 50 }}>
-              <XAxis dataKey="name" interval={0} angle={-20} height={70} tick={{ fontSize: 11 }} />
+            <BarChart data={trimmedAe} margin={{ top: 10, right: 20, left: 0, bottom: 70 }}>
+              <XAxis
+                dataKey="name"
+                interval={0}
+                angle={-30}
+                height={90}
+                tick={{ fontSize: 11 }}
+                tickMargin={10}
+              />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="value" fill={COLORS[1]} radius={[6, 6, 0, 0]} />
+              <Bar dataKey="value" fill={COLORS[1]} radius={[6, 6, 0, 0]} isAnimationActive />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -33,15 +40,22 @@ export default function AeCharts({ rows }: { rows: CanonicalRow[] }) {
       <ChartCard title="A.E. by Status" subtitle="Stacked">
         <div style={{ width: Math.max(640, stackedData.length * 80) }}>
           <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={stackedData} margin={{ top: 10, right: 20, left: 0, bottom: 50 }}>
-              <XAxis dataKey="name" interval={0} angle={-20} height={70} tick={{ fontSize: 11 }} />
+            <BarChart data={stackedData} margin={{ top: 10, right: 20, left: 0, bottom: 70 }}>
+              <XAxis
+                dataKey="name"
+                interval={0}
+                angle={-30}
+                height={90}
+                tick={{ fontSize: 11 }}
+                tickMargin={10}
+              />
               <YAxis />
               <Tooltip />
               <Legend />
               {topStatuses.map((status, idx) => (
-                <Bar key={status} dataKey={status} stackId="stack" fill={COLORS[idx % COLORS.length]} />
+                <Bar key={status} dataKey={status} stackId="stack" fill={COLORS[idx % COLORS.length]} isAnimationActive />
               ))}
-              <Bar dataKey="Other" stackId="stack" fill="#9ca3af" />
+              <Bar dataKey="Other" stackId="stack" fill="#9ca3af" isAnimationActive />
             </BarChart>
           </ResponsiveContainer>
         </div>

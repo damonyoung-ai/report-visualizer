@@ -123,10 +123,20 @@ export default function Dashboard() {
           <div className="flex flex-wrap gap-3">
             <button className="button" onClick={exportDashboard}>Export dashboard as PNG</button>
             <button className="button-outline" onClick={exportCleanedCsv}>Download cleaned CSV</button>
+            <button
+              className="button-outline"
+              onClick={() => {
+                sessionStorage.removeItem('sqo-dataset');
+                router.push('/');
+              }}
+            >
+              Run new report
+            </button>
           </div>
         </header>
 
-        <KpiStrip
+        <div className="fade-up">
+          <KpiStrip
           total={rows.length}
           dateMin={dateRange.min}
           dateMax={dateRange.max}
@@ -134,27 +144,30 @@ export default function Dashboard() {
           missingStatus={missingStatus}
           missingSource={missingSource}
           missingAe={missingAe}
-        />
+          />
+        </div>
 
-        <FilterBar
-          filters={filters}
-          sources={sources}
-          statuses={statuses}
-          aes={aes}
-          onChange={setFilters}
-        />
+        <div className="fade-up-delay">
+          <FilterBar
+            filters={filters}
+            sources={sources}
+            statuses={statuses}
+            aes={aes}
+            onChange={setFilters}
+          />
+        </div>
 
-        <section className="space-y-4">
+        <section className="space-y-4 fade-up">
           <h2 className="text-xl font-semibold">Source Charts</h2>
           <SourceCharts data={sourceCounts} topN={topN} onTopNChange={setTopN} />
         </section>
 
-        <section className="space-y-4">
+        <section className="space-y-4 fade-up">
           <h2 className="text-xl font-semibold">Status Charts + Ratios</h2>
           <StatusCharts rows={ratioRows} ratioMode={ratioMode} onRatioModeChange={setRatioMode} />
         </section>
 
-        <section className="space-y-4">
+        <section className="space-y-4 fade-up">
           <h2 className="text-xl font-semibold">Meeting Date Charts</h2>
           <MeetingDateCharts
             rows={filtered}
@@ -165,12 +178,14 @@ export default function Dashboard() {
           />
         </section>
 
-        <section className="space-y-4">
+        <section className="space-y-4 fade-up">
           <h2 className="text-xl font-semibold">A.E. Charts</h2>
           <AeCharts rows={filtered} />
         </section>
 
-        <DataPreviewTable rows={filtered} />
+        <div className="fade-up">
+          <DataPreviewTable rows={filtered} />
+        </div>
       </div>
     </main>
   );

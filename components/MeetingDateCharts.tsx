@@ -40,7 +40,7 @@ export default function MeetingDateCharts({
             <XAxis dataKey="x" tick={{ fontSize: 11 }} />
             <YAxis />
             <Tooltip />
-            <Line type="monotone" dataKey="y" stroke="#1f6feb" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="y" stroke="#1f6feb" strokeWidth={2} dot={false} isAnimationActive />
           </LineChart>
         </ResponsiveContainer>
       </ChartCard>
@@ -51,7 +51,7 @@ export default function MeetingDateCharts({
             <XAxis dataKey="name" tick={{ fontSize: 11 }} />
             <YAxis />
             <Tooltip />
-            <Bar dataKey="value" fill="#12b981" radius={[6, 6, 0, 0]} />
+            <Bar dataKey="value" fill="#12b981" radius={[6, 6, 0, 0]} isAnimationActive />
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>

@@ -19,6 +19,8 @@ export default function StatusCharts({
   const ratioData = ratioTable(rows, 'status');
   const barData = ratioData.map((item) => ({ name: item.label, value: item.count }));
   const rollup = rollupStatus(rows);
+  const labelRenderer = ({ name, percent }: { name: string; percent: number }) =>
+    `${name} ${(percent * 100).toFixed(0)}%`;
 
   return (
     <div className="space-y-6">
@@ -34,11 +36,18 @@ export default function StatusCharts({
         <ChartCard title="Status counts" subtitle="Status">
           <div style={{ width: Math.max(640, barData.length * 80) }}>
             <ResponsiveContainer width="100%" height={320}>
-              <BarChart data={barData} margin={{ top: 10, right: 20, left: 0, bottom: 50 }}>
-                <XAxis dataKey="name" interval={0} angle={-20} height={70} tick={{ fontSize: 11 }} />
+              <BarChart data={barData} margin={{ top: 10, right: 20, left: 0, bottom: 70 }}>
+                <XAxis
+                  dataKey="name"
+                  interval={0}
+                  angle={-30}
+                  height={90}
+                  tick={{ fontSize: 11 }}
+                  tickMargin={10}
+                />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="value" fill={COLORS[2]} radius={[6, 6, 0, 0]} />
+                <Bar dataKey="value" fill={COLORS[2]} radius={[6, 6, 0, 0]} isAnimationActive />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -48,7 +57,16 @@ export default function StatusCharts({
           <ResponsiveContainer width="100%" height={320}>
             <PieChart>
               <Tooltip />
-              <Pie data={barData} dataKey="value" nameKey="name" outerRadius={110} innerRadius={60}>
+              <Pie
+                data={barData}
+                dataKey="value"
+                nameKey="name"
+                outerRadius={110}
+                innerRadius={60}
+                label={labelRenderer}
+                labelLine={false}
+                isAnimationActive
+              >
                 {barData.map((_, idx) => (
                   <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
                 ))}
