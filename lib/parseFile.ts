@@ -13,7 +13,7 @@ export async function parseCsvToGrid(file: File): Promise<string[][]> {
         const data = result.data as string[][];
         resolve(data);
       },
-      error: (error: Papa.ParseError) => reject(error),
+      error: (error: Error) => reject(error),
     });
   });
 }
@@ -30,7 +30,7 @@ export async function parseCsvTextToGrid(text: string): Promise<string[][]> {
         const data = result.data as string[][];
         resolve(data);
       },
-      error: (error: Papa.ParseError) => reject(error),
+      error: (error: Error) => reject(error),
     });
   });
 }
