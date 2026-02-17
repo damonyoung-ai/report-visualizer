@@ -12,6 +12,8 @@ import AeCharts from '../../components/AeCharts';
 import DataPreviewTable from '../../components/DataPreviewTable';
 import { applyFilters, countBy } from '../../lib/aggregations';
 import { formatDate } from '../../lib/dateUtils';
+import { fetchSheetGrid } from '../../lib/googleSheets';
+import { cleanDataset } from '../../lib/cleanDataset';
 import { CanonicalRow, Filters } from '../../types/sqo';
 
 const initialFilters: Filters = {
@@ -29,6 +31,11 @@ export default function Dashboard() {
   const [ratioMode, setRatioMode] = useState<'all' | 'filtered'>('all');
   const [groupBy, setGroupBy] = useState<'week' | 'month'>('week');
   const [includeMissing, setIncludeMissing] = useState(false);
+  const [sheetUrl, setSheetUrl] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSync, setLastSync] = useState<Date | null>(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshMinutes, setRefreshMinutes] = useState(5);
   const dashboardRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -47,7 +54,34 @@ export default function Dashboard() {
         raw: row.raw,
       }))
     );
+    setLastSync(new Date());
+    const storedUrl = localStorage.getItem('sqo-sheet-url');
+    setSheetUrl(storedUrl);
   }, [router]);
+
+  const syncFromSheet = async () => {
+    if (!sheetUrl) return;
+    setSyncing(true);
+    try {
+      const grid = await fetchSheetGrid(sheetUrl);
+      const cleaned = cleanDataset(grid);
+      setRows(cleaned.rows);
+      setLastSync(new Date());
+    } catch {
+      // keep existing data if sync fails
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!sheetUrl || !autoRefresh) return;
+    const intervalMs = Math.max(1, refreshMinutes) * 60 * 1000;
+    const id = setInterval(() => {
+      syncFromSheet();
+    }, intervalMs);
+    return () => clearInterval(id);
+  }, [sheetUrl, autoRefresh, refreshMinutes]);
 
   const exportDashboard = async () => {
     if (!dashboardRef.current) return;
@@ -127,12 +161,39 @@ export default function Dashboard() {
               className="button-outline"
               onClick={() => {
                 sessionStorage.removeItem('sqo-dataset');
+                localStorage.removeItem('sqo-sheet-url');
                 router.push('/');
               }}
             >
               Run new report
             </button>
+            {sheetUrl ? (
+              <button className="button-outline" onClick={syncFromSheet} disabled={syncing}>
+                {syncing ? 'Syncing...' : 'Sync now'}
+              </button>
+            ) : null}
           </div>
+          {sheetUrl ? (
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate/60">
+              <span>Auto-sync enabled</span>
+              <span>Last sync: {lastSync ? lastSync.toLocaleTimeString() : '—'}</span>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={autoRefresh} onChange={(event) => setAutoRefresh(event.target.checked)} />
+                Auto refresh
+              </label>
+              <label className="flex items-center gap-2">
+                <span>Every</span>
+                <input
+                  type="number"
+                  min={1}
+                  className="input w-16"
+                  value={refreshMinutes}
+                  onChange={(event) => setRefreshMinutes(Number(event.target.value))}
+                />
+                <span>min</span>
+              </label>
+            </div>
+          ) : null}
         </header>
 
         <div className="fade-up">

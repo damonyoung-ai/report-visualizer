@@ -5,13 +5,17 @@ import { useRouter } from 'next/navigation';
 import Uploader from '../components/Uploader';
 import { parseCsvToGrid, parseXlsxToGrid } from '../lib/parseFile';
 import { cleanDataset } from '../lib/cleanDataset';
+import { fetchSheetGrid } from '../lib/googleSheets';
 
 export default function Home() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [sheetUrl, setSheetUrl] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleFile = async (file: File, sheet?: string) => {
     setError(null);
+    setLoading(true);
     try {
       const ext = file.name.split('.').pop()?.toLowerCase();
       let grid: string[][] = [];
@@ -46,9 +50,43 @@ export default function Home() {
       };
 
       sessionStorage.setItem('sqo-dataset', JSON.stringify(payload));
+      localStorage.removeItem('sqo-sheet-url');
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to parse file.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSheetUrl = async () => {
+    if (!sheetUrl.trim()) return;
+    setError(null);
+    setLoading(true);
+    try {
+      const grid = await fetchSheetGrid(sheetUrl.trim());
+      const cleaned = cleanDataset(grid);
+      if (!cleaned.rows.length) throw new Error('No data rows found.');
+
+      const payload = {
+        rows: cleaned.rows.map((row) => ({
+          meetingDate: row.meetingDate ? row.meetingDate.toISOString() : null,
+          source: row.source,
+          status: row.status,
+          ae: row.ae,
+          raw: row.raw,
+        })),
+        rawHeaders: cleaned.rawHeaders,
+        canonicalHeaders: cleaned.canonicalHeaders,
+      };
+
+      sessionStorage.setItem('sqo-dataset', JSON.stringify(payload));
+      localStorage.setItem('sqo-sheet-url', sheetUrl.trim());
+      router.push('/dashboard');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch sheet.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -72,6 +110,26 @@ export default function Home() {
         </header>
 
         <Uploader onFileSelected={(file) => handleFile(file)} error={error} onExample={handleExample} />
+
+        <div className="card p-6">
+          <p className="section-title">Auto-sync</p>
+          <h2 className="text-xl font-semibold">Connect a Google Sheet</h2>
+          <p className="mt-2 text-sm text-slate/70">
+            Paste a public Google Sheets URL to sync automatically without uploads.
+          </p>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <input
+              className="input w-full"
+              placeholder="https://docs.google.com/spreadsheets/d/..."
+              value={sheetUrl}
+              onChange={(event) => setSheetUrl(event.target.value)}
+            />
+            <button className="button" onClick={handleSheetUrl} disabled={loading}>
+              {loading ? 'Loading...' : 'Connect'}
+            </button>
+          </div>
+          {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
+        </div>
       </div>
     </main>
   );

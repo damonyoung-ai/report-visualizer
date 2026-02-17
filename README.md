@@ -8,6 +8,7 @@ A production-ready Next.js 14 app that lets you upload a CSV/XLSX report and ins
 - Normalizes column names to canonical keys
 - Dashboard with KPIs, charts, and ratios
 - Global filters for Meeting Date, Source, Status, A.E.
+- Auto-sync from a public Google Sheet URL
 - Download cleaned CSV
 - Export dashboard as PNG
 
