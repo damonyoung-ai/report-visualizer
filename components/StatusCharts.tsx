@@ -1,6 +1,6 @@
 'use client';
 
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import ChartCard from './ChartCard';
 import { ratioTable, rollupStatus } from '../lib/aggregations';
 import { CanonicalRow } from '../types/sqo';
@@ -19,8 +19,6 @@ export default function StatusCharts({
   const ratioData = ratioTable(rows, 'status');
   const barData = ratioData.map((item) => ({ name: item.label, value: item.count }));
   const rollup = rollupStatus(rows);
-  const labelRenderer = ({ name, percent }: { name: string; percent: number }) =>
-    `${name} ${(percent * 100).toFixed(0)}%`;
   const wrappedTick = ({ x, y, payload }: { x: number; y: number; payload?: { value: string } }) => {
     const value = payload?.value ?? '';
     const words = String(value).split(' ');
@@ -70,30 +68,6 @@ export default function StatusCharts({
           </div>
         </ChartCard>
 
-        <ChartCard title="Status ratios" subtitle="Status">
-          <ResponsiveContainer width="100%" height={320}>
-            <PieChart>
-              <Tooltip cursor={false} />
-              <Pie
-                data={barData}
-                dataKey="value"
-                nameKey="name"
-                outerRadius={110}
-                innerRadius={60}
-                label={labelRenderer}
-                labelLine={false}
-                isAnimationActive
-              >
-                {barData.map((_, idx) => (
-                  <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
         <ChartCard title="Status ratio table" subtitle="Status">
           <div className="overflow-auto">
             <table className="w-full text-xs">
@@ -116,7 +90,9 @@ export default function StatusCharts({
             </table>
           </div>
         </ChartCard>
+      </div>
 
+      <div className="grid gap-6 lg:grid-cols-2">
         <ChartCard title="Mtg. Complete rollup" subtitle="Status rollup">
           <div className="space-y-3">
             {rollup.map((item) => (
