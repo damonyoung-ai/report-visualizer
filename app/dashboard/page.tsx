@@ -18,19 +18,32 @@ import { fetchSheetGrid } from '../../lib/googleSheets';
 import { cleanDataset } from '../../lib/cleanDataset';
 import { CanonicalRow, Filters } from '../../types/sqo';
 
-const initialFilters: Filters = {
-  sources: [],
-  statuses: [],
-  aes: [],
-  excludeMissing: true,
-};
+function getCurrentMonthFilters(): Filters {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const toInput = (date: Date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+  return {
+    dateFrom: toInput(start),
+    dateTo: toInput(end),
+    sources: [],
+    statuses: [],
+    aes: [],
+    excludeMissing: true,
+  };
+}
 
 export default function Dashboard() {
   const router = useRouter();
   const [rows, setRows] = useState<CanonicalRow[]>([]);
-  const [filters, setFilters] = useState<Filters>(initialFilters);
+  const [filters, setFilters] = useState<Filters>(getCurrentMonthFilters);
   const [topN, setTopN] = useState(10);
-  const [ratioMode, setRatioMode] = useState<'all' | 'filtered'>('all');
+  const [ratioMode, setRatioMode] = useState<'all' | 'filtered'>('filtered');
   const [groupBy, setGroupBy] = useState<'week' | 'month'>('week');
   const [dateSetGroupBy, setDateSetGroupBy] = useState<'day' | 'week' | 'month'>('day');
   const [includeMissing, setIncludeMissing] = useState(false);
@@ -123,27 +136,27 @@ export default function Dashboard() {
   const statuses = useMemo(() => countBy(rows, 'status').map(([label]) => label), [rows]);
   const aes = useMemo(() => countBy(rows, 'ae').map(([label]) => label), [rows]);
 
-  const missingMeeting = useMemo(() => (rows.length ? (rows.filter((r) => !r.meetingDate).length / rows.length) * 100 : 0), [rows]);
-  const missingStatus = useMemo(() => (rows.length ? (rows.filter((r) => !r.status).length / rows.length) * 100 : 0), [rows]);
-  const missingSource = useMemo(() => (rows.length ? (rows.filter((r) => !r.source).length / rows.length) * 100 : 0), [rows]);
-  const missingAe = useMemo(() => (rows.length ? (rows.filter((r) => !r.ae).length / rows.length) * 100 : 0), [rows]);
+  const missingMeeting = useMemo(() => (filtered.length ? (filtered.filter((r) => !r.meetingDate).length / filtered.length) * 100 : 0), [filtered]);
+  const missingStatus = useMemo(() => (filtered.length ? (filtered.filter((r) => !r.status).length / filtered.length) * 100 : 0), [filtered]);
+  const missingSource = useMemo(() => (filtered.length ? (filtered.filter((r) => !r.source).length / filtered.length) * 100 : 0), [filtered]);
+  const missingAe = useMemo(() => (filtered.length ? (filtered.filter((r) => !r.ae).length / filtered.length) * 100 : 0), [filtered]);
 
   const dateRange = useMemo(() => {
-    const dates = rows.map((row) => row.meetingDate).filter(Boolean) as Date[];
+    const dates = filtered.map((row) => row.meetingDate).filter(Boolean) as Date[];
     if (!dates.length) return { min: null, max: null };
     const min = new Date(Math.min(...dates.map((d) => d.getTime())));
     const max = new Date(Math.max(...dates.map((d) => d.getTime())));
     return { min, max };
-  }, [rows]);
+  }, [filtered]);
 
   const sourceCounts = useMemo(() => countBy(filtered, 'source'), [filtered]);
   const quotaPoints = useMemo(() => {
-    return rows.reduce((total, row) => {
+    return filtered.reduce((total, row) => {
       const source = (row.source ?? '').trim().toLowerCase();
       if (!source) return total;
       return total + (source === 'upsell' ? 1 : 2);
     }, 0);
-  }, [rows]);
+  }, [filtered]);
 
   if (!rows.length) {
     return (
@@ -210,9 +223,6 @@ export default function Dashboard() {
 
         <div className="fade-up">
           <KpiStrip
-          total={rows.length}
-          dateMin={dateRange.min}
-          dateMax={dateRange.max}
           missingMeeting={missingMeeting}
           missingStatus={missingStatus}
           missingSource={missingSource}
