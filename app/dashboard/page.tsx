@@ -11,6 +11,7 @@ import MeetingDateCharts from '../../components/MeetingDateCharts';
 import DateSetCharts from '../../components/DateSetCharts';
 import AeCharts from '../../components/AeCharts';
 import DataPreviewTable from '../../components/DataPreviewTable';
+import QuotaTracker from '../../components/QuotaTracker';
 import { applyFilters, countBy } from '../../lib/aggregations';
 import { formatDate } from '../../lib/dateUtils';
 import { fetchSheetGrid } from '../../lib/googleSheets';
@@ -136,6 +137,13 @@ export default function Dashboard() {
   }, [rows]);
 
   const sourceCounts = useMemo(() => countBy(filtered, 'source'), [filtered]);
+  const quotaPoints = useMemo(() => {
+    return rows.reduce((total, row) => {
+      const source = (row.source ?? '').trim().toLowerCase();
+      if (!source) return total;
+      return total + (source === 'upsell' ? 1 : 2);
+    }, 0);
+  }, [rows]);
 
   if (!rows.length) {
     return (
@@ -210,6 +218,10 @@ export default function Dashboard() {
           missingSource={missingSource}
           missingAe={missingAe}
           />
+        </div>
+
+        <div className="fade-up">
+          <QuotaTracker points={quotaPoints} quota={16} />
         </div>
 
         <div className="fade-up-delay relative z-[60] overflow-visible">
