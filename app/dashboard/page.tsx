@@ -152,6 +152,11 @@ export default function Dashboard() {
   const sourceCounts = useMemo(() => countBy(filtered, 'source'), [filtered]);
   const quotaPoints = useMemo(() => {
     return filtered.reduce((total, row) => {
+      const status = (row.status ?? '').trim().toLowerCase();
+      const normalizedStatus = status.replace(/[^a-z]/g, '');
+      const isQualifiedStatus = normalizedStatus === 'mtgcompletediscocc';
+      if (!isQualifiedStatus) return total;
+
       const source = (row.source ?? '').trim().toLowerCase();
       if (!source) return total;
       return total + (source === 'upsell' ? 1 : 2);
