@@ -38,6 +38,7 @@ export default function Home() {
 
       const payload = {
         rows: cleaned.rows.map((row) => ({
+          dateSet: row.dateSet ? row.dateSet.toISOString() : null,
           meetingDate: row.meetingDate ? row.meetingDate.toISOString() : null,
           source: row.source,
           status: row.status,
@@ -70,6 +71,7 @@ export default function Home() {
 
       const payload = {
         rows: cleaned.rows.map((row) => ({
+          dateSet: row.dateSet ? row.dateSet.toISOString() : null,
           meetingDate: row.meetingDate ? row.meetingDate.toISOString() : null,
           source: row.source,
           status: row.status,

@@ -30,9 +30,11 @@ export function cleanDataset(grid: string[][]): CleanDataset {
       mapped[column.canonical] = raw[column.header] ?? null;
     });
 
+    const dateSet = mapped.dateSet ? parseMeetingDate(mapped.dateSet) : null;
     const meetingDate = mapped.meetingDate ? parseMeetingDate(mapped.meetingDate) : null;
 
     rows.push({
+      dateSet,
       meetingDate,
       source: mapped.source ? mapped.source.trim() : null,
       status: mapped.status ? mapped.status.trim() : null,

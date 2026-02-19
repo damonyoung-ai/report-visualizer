@@ -1,4 +1,5 @@
 export type CanonicalRow = {
+  dateSet: Date | null;
   meetingDate: Date | null;
   source: string | null;
   status: string | null;

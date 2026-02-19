@@ -2,7 +2,7 @@ import { CanonicalRow } from '../types/sqo';
 
 export default function DataPreviewTable({ rows }: { rows: CanonicalRow[] }) {
   const preview = rows.slice(0, 50);
-  const columns = ['meetingDate', 'source', 'status', 'ae'];
+  const columns = ['dateSet', 'meetingDate', 'source', 'status', 'ae'];
 
   return (
     <div className="card p-5">
@@ -27,6 +27,7 @@ export default function DataPreviewTable({ rows }: { rows: CanonicalRow[] }) {
           <tbody>
             {preview.map((row, idx) => (
               <tr key={idx} className="border-t border-slate/10">
+                <td className="px-3 py-2">{row.dateSet ? row.dateSet.toLocaleDateString() : '—'}</td>
                 <td className="px-3 py-2">{row.meetingDate ? row.meetingDate.toLocaleDateString() : '—'}</td>
                 <td className="px-3 py-2">{row.source ?? '—'}</td>
                 <td className="px-3 py-2">{row.status ?? '—'}</td>

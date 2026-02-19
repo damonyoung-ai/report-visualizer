@@ -8,6 +8,7 @@ import KpiStrip from '../../components/KpiStrip';
 import SourceCharts from '../../components/SourceCharts';
 import StatusCharts from '../../components/StatusCharts';
 import MeetingDateCharts from '../../components/MeetingDateCharts';
+import DateSetCharts from '../../components/DateSetCharts';
 import AeCharts from '../../components/AeCharts';
 import DataPreviewTable from '../../components/DataPreviewTable';
 import { applyFilters, countBy } from '../../lib/aggregations';
@@ -30,6 +31,7 @@ export default function Dashboard() {
   const [topN, setTopN] = useState(10);
   const [ratioMode, setRatioMode] = useState<'all' | 'filtered'>('all');
   const [groupBy, setGroupBy] = useState<'week' | 'month'>('week');
+  const [dateSetGroupBy, setDateSetGroupBy] = useState<'day' | 'week' | 'month'>('day');
   const [includeMissing, setIncludeMissing] = useState(false);
   const [sheetUrl, setSheetUrl] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
@@ -44,9 +46,10 @@ export default function Dashboard() {
       router.push('/');
       return;
     }
-    const payload = JSON.parse(raw) as { rows: { meetingDate: string | null; source: string | null; status: string | null; ae: string | null; raw: Record<string, string | null> }[] };
+    const payload = JSON.parse(raw) as { rows: { dateSet: string | null; meetingDate: string | null; source: string | null; status: string | null; ae: string | null; raw: Record<string, string | null> }[] };
     setRows(
       payload.rows.map((row) => ({
+        dateSet: row.dateSet ? new Date(row.dateSet) : null,
         meetingDate: row.meetingDate ? new Date(row.meetingDate) : null,
         source: row.source,
         status: row.status,
@@ -93,10 +96,11 @@ export default function Dashboard() {
   };
 
   const exportCleanedCsv = () => {
-    const header = ['meetingDate', 'source', 'status', 'ae'];
+    const header = ['dateSet', 'meetingDate', 'source', 'status', 'ae'];
     const lines = [header.join(',')];
     rows.forEach((row) => {
       const values = [
+        row.dateSet ? row.dateSet.toISOString() : '',
         row.meetingDate ? row.meetingDate.toISOString() : '',
         row.source ?? '',
         row.status ?? '',
@@ -226,6 +230,11 @@ export default function Dashboard() {
         <section className="space-y-4 fade-up">
           <h2 className="text-xl font-semibold">Status Charts + Ratios</h2>
           <StatusCharts rows={ratioRows} ratioMode={ratioMode} onRatioModeChange={setRatioMode} />
+        </section>
+
+        <section className="space-y-4 fade-up">
+          <h2 className="text-xl font-semibold">Date Set Charts</h2>
+          <DateSetCharts rows={filtered} groupBy={dateSetGroupBy} onGroupByChange={setDateSetGroupBy} />
         </section>
 
         <section className="space-y-4 fade-up">

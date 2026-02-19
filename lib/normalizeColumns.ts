@@ -7,6 +7,7 @@ export const canonicalMap = (header: string) => {
     .trim();
 
   if (normalized === 'meetingdate' || normalized === 'meeting' || normalized === 'meetingdt') return 'meetingDate';
+  if (normalized === 'dateset' || normalized === 'setdate') return 'dateSet';
   if (normalized === 'source') return 'source';
   if (normalized === 'status') return 'status';
   if (normalized === 'ae' || normalized === 'a.e' || normalized === 'a.e.' || normalized === 'a_e' || normalized === 'a e') return 'ae';

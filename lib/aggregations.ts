@@ -101,6 +101,26 @@ export function dayOfWeekDistribution(rows: CanonicalRow[]) {
   return order.map((day) => ({ name: day, value: map.get(day) ?? 0 }));
 }
 
+export function dateSetSeries(rows: CanonicalRow[], groupBy: 'day' | 'week' | 'month') {
+  const map = new Map<string, number>();
+  rows.forEach((row) => {
+    if (!row.dateSet) return;
+    let key = '';
+    if (groupBy === 'day') {
+      key = row.dateSet.toISOString().slice(0, 10);
+    } else if (groupBy === 'week') {
+      key = getIsoWeek(row.dateSet);
+    } else {
+      key = getMonthKey(row.dateSet);
+    }
+    map.set(key, (map.get(key) ?? 0) + 1);
+  });
+
+  return Array.from(map.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([x, y]) => ({ x, y }));
+}
+
 export function stackByStatus(rows: CanonicalRow[], topStatuses: string[]) {
   const grouped = new Map<string, Record<string, number>>();
   rows.forEach((row) => {
