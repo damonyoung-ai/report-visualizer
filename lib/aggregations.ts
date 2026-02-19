@@ -121,6 +121,17 @@ export function dateSetSeries(rows: CanonicalRow[], groupBy: 'day' | 'week' | 'm
     .map(([x, y]) => ({ x, y }));
 }
 
+export function dateSetDayOfWeekDistribution(rows: CanonicalRow[]) {
+  const order = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const map = new Map<string, number>(order.map((day) => [day, 0]));
+  rows.forEach((row) => {
+    if (!row.dateSet) return;
+    const day = getDayOfWeek(row.dateSet);
+    map.set(day, (map.get(day) ?? 0) + 1);
+  });
+  return order.map((day) => ({ name: day, value: map.get(day) ?? 0 }));
+}
+
 export function stackByStatus(rows: CanonicalRow[], topStatuses: string[]) {
   const grouped = new Map<string, Record<string, number>>();
   rows.forEach((row) => {

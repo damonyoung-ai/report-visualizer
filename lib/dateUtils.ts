@@ -45,3 +45,23 @@ export function getMonthKey(date: Date) {
 export function getDayOfWeek(date: Date) {
   return date.toLocaleDateString('en-US', { weekday: 'short' });
 }
+
+export function formatShortMonthDay(date: Date) {
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+export function formatShortMonthYear(date: Date) {
+  return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
+
+export function isoWeekToDate(isoWeek: string): Date | null {
+  const match = isoWeek.match(/^(\d{4})-W(\d{2})$/);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const week = Number(match[2]);
+  const jan4 = new Date(Date.UTC(year, 0, 4));
+  const jan4Day = jan4.getUTCDay() || 7;
+  const monday = new Date(jan4);
+  monday.setUTCDate(jan4.getUTCDate() - jan4Day + 1 + (week - 1) * 7);
+  return new Date(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate());
+}
