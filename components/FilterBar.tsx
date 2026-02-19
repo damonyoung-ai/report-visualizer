@@ -54,7 +54,7 @@ function MultiSelectDropdown({
         <span className="text-xs text-slate/60">{open ? '▲' : '▼'}</span>
       </button>
       {open ? (
-        <div className="absolute left-0 top-full z-20 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-slate/20 bg-white p-2 shadow-lg">
+        <div className="absolute left-0 top-full z-[80] mt-1 max-h-64 w-full overflow-auto rounded-xl border border-slate/20 bg-white p-2 shadow-lg">
           <div className="mb-2 flex items-center justify-between">
             <button type="button" className="text-xs text-accent" onClick={() => onChange(options)}>
               Select all
@@ -85,7 +85,7 @@ export default function FilterBar({ filters, sources, statuses, aes, onChange }:
   const update = (patch: Partial<Filters>) => onChange({ ...filters, ...patch });
 
   return (
-    <div className="card p-4">
+    <div className="card relative z-[60] overflow-visible p-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
         <div className="flex flex-col gap-2">
           <label className="text-xs text-slate/70">Meeting Date From</label>

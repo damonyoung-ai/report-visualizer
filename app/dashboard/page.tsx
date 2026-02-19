@@ -212,7 +212,7 @@ export default function Dashboard() {
           />
         </div>
 
-        <div className="fade-up-delay">
+        <div className="fade-up-delay relative z-[60] overflow-visible">
           <FilterBar
             filters={filters}
             sources={sources}
