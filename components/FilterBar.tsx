@@ -93,7 +93,8 @@ export default function FilterBar({ filters, sources, statuses, aes, onChange }:
             type="date"
             className="input"
             value={filters.dateFrom ?? ''}
-            onChange={(event) => update({ dateFrom: event.target.value })}
+            disabled={filters.allTime}
+            onChange={(event) => update({ dateFrom: event.target.value, allTime: false })}
           />
         </div>
         <div className="flex flex-col gap-2">
@@ -102,8 +103,26 @@ export default function FilterBar({ filters, sources, statuses, aes, onChange }:
             type="date"
             className="input"
             value={filters.dateTo ?? ''}
-            onChange={(event) => update({ dateTo: event.target.value })}
+            disabled={filters.allTime}
+            onChange={(event) => update({ dateTo: event.target.value, allTime: false })}
           />
+        </div>
+        <div className="flex items-center gap-2 pb-1">
+          <input
+            id="all-time-toggle"
+            type="checkbox"
+            checked={filters.allTime}
+            onChange={(event) =>
+              update(
+                event.target.checked
+                  ? { allTime: true, dateFrom: '', dateTo: '' }
+                  : { allTime: false }
+              )
+            }
+          />
+          <label htmlFor="all-time-toggle" className="text-xs text-slate/70">
+            All Time
+          </label>
         </div>
         <MultiSelectDropdown
           label="Source"

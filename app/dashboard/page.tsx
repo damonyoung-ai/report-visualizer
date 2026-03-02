@@ -31,6 +31,7 @@ function getCurrentMonthFilters(): Filters {
   return {
     dateFrom: toInput(start),
     dateTo: toInput(end),
+    allTime: false,
     sources: [],
     statuses: [],
     aes: [],

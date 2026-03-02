@@ -16,6 +16,7 @@ export type CleanDataset = {
 export type Filters = {
   dateFrom?: string;
   dateTo?: string;
+  allTime: boolean;
   sources: string[];
   statuses: string[];
   aes: string[];

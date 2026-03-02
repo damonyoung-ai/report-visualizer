@@ -9,7 +9,7 @@ export function applyFilters(rows: CanonicalRow[], filters: Filters) {
       if (!row.meetingDate || !row.source || !row.status || !row.ae) return false;
     }
 
-    if (filters.dateFrom || filters.dateTo) {
+    if (!filters.allTime && (filters.dateFrom || filters.dateTo)) {
       if (!row.meetingDate) return false;
       if (filters.dateFrom && row.meetingDate < new Date(filters.dateFrom)) return false;
       if (filters.dateTo) {
