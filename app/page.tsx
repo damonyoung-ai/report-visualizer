@@ -1,17 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Uploader from '../components/Uploader';
 import { parseCsvToGrid, parseXlsxToGrid } from '../lib/parseFile';
 import { cleanDataset } from '../lib/cleanDataset';
 import { fetchSheetGrid } from '../lib/googleSheets';
+import { DEFAULT_SHEET_URL } from '../lib/config';
 
 export default function Home() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [sheetUrl, setSheetUrl] = useState('');
   const [loading, setLoading] = useState(false);
+  const autoConnectStartedRef = useRef(false);
 
   const handleFile = async (file: File, sheet?: string) => {
     setError(null);
@@ -60,7 +61,7 @@ export default function Home() {
     }
   };
 
-  const handleSheetUrl = async () => {
+  const handleSheetUrl = useCallback(async (sheetUrl: string) => {
     if (!sheetUrl.trim()) return;
     setError(null);
     setLoading(true);
@@ -90,7 +91,13 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    if (!DEFAULT_SHEET_URL || autoConnectStartedRef.current) return;
+    autoConnectStartedRef.current = true;
+    handleSheetUrl(DEFAULT_SHEET_URL);
+  }, [handleSheetUrl]);
 
   const handleExample = async (path: string) => {
     const response = await fetch(path);
@@ -115,19 +122,13 @@ export default function Home() {
 
         <div className="card p-6">
           <p className="section-title">Auto-sync</p>
-          <h2 className="text-xl font-semibold">Connect a Google Sheet</h2>
+          <h2 className="text-xl font-semibold">Google Sheet Connected</h2>
           <p className="mt-2 text-sm text-slate/70">
-            Paste a public Google Sheets URL to sync automatically without uploads.
+            This dashboard auto-loads your configured Google Sheet. Use reload if you want to reconnect.
           </p>
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-            <input
-              className="input w-full"
-              placeholder="https://docs.google.com/spreadsheets/d/..."
-              value={sheetUrl}
-              onChange={(event) => setSheetUrl(event.target.value)}
-            />
-            <button className="button" onClick={handleSheetUrl} disabled={loading}>
-              {loading ? 'Loading...' : 'Connect'}
+          <div className="mt-4 flex gap-3">
+            <button className="button" onClick={() => handleSheetUrl(DEFAULT_SHEET_URL)} disabled={loading}>
+              {loading ? 'Loading...' : 'Reload sheet'}
             </button>
           </div>
           {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}

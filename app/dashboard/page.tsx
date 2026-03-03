@@ -17,6 +17,7 @@ import { formatDate } from '../../lib/dateUtils';
 import { fetchSheetGrid } from '../../lib/googleSheets';
 import { cleanDataset } from '../../lib/cleanDataset';
 import { CanonicalRow, Filters } from '../../types/sqo';
+import { DEFAULT_SHEET_URL } from '../../lib/config';
 
 function getCurrentMonthFilters(): Filters {
   const now = new Date();
@@ -52,7 +53,7 @@ export default function Dashboard() {
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [refreshMinutes, setRefreshMinutes] = useState(5);
+  const [refreshHours, setRefreshHours] = useState(12);
   const dashboardRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -74,7 +75,7 @@ export default function Dashboard() {
     );
     setLastSync(new Date());
     const storedUrl = localStorage.getItem('sqo-sheet-url');
-    setSheetUrl(storedUrl);
+    setSheetUrl(storedUrl || DEFAULT_SHEET_URL);
   }, [router]);
 
   const syncFromSheet = async () => {
@@ -94,12 +95,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!sheetUrl || !autoRefresh) return;
-    const intervalMs = Math.max(1, refreshMinutes) * 60 * 1000;
+    const intervalMs = Math.max(1, refreshHours) * 60 * 60 * 1000;
     const id = setInterval(() => {
       syncFromSheet();
     }, intervalMs);
     return () => clearInterval(id);
-  }, [sheetUrl, autoRefresh, refreshMinutes]);
+  }, [sheetUrl, autoRefresh, refreshHours]);
 
   const exportDashboard = async () => {
     if (!dashboardRef.current) return;
@@ -218,10 +219,10 @@ export default function Dashboard() {
                   type="number"
                   min={1}
                   className="input w-16"
-                  value={refreshMinutes}
-                  onChange={(event) => setRefreshMinutes(Number(event.target.value))}
+                  value={refreshHours}
+                  onChange={(event) => setRefreshHours(Number(event.target.value))}
                 />
-                <span>min</span>
+                <span>hours</span>
               </label>
             </div>
           ) : null}

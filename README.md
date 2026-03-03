@@ -12,6 +12,13 @@ A production-ready Next.js 14 app that lets you upload a CSV/XLSX report and ins
 - Download cleaned CSV
 - Export dashboard as PNG
 
+## Default Google Sheet
+- The app auto-loads a default Google Sheet URL on the landing page.
+- You can override it with:
+```bash
+NEXT_PUBLIC_DEFAULT_SHEET_URL=\"https://docs.google.com/spreadsheets/d/<sheet-id>/edit\"
+```
+
 ## Tech Stack
 - Next.js 14 (App Router) + TypeScript
 - Tailwind CSS
