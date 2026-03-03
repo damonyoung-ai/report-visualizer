@@ -132,6 +132,29 @@ export default function Dashboard() {
   };
 
   const filtered = useMemo(() => applyFilters(rows, filters), [rows, filters]);
+  const dateSetFiltered = useMemo(() => {
+    return rows.filter((row) => {
+      if (filters.excludeMissing) {
+        if (!row.dateSet || !row.source || !row.status || !row.ae) return false;
+      }
+
+      if (!filters.allTime && (filters.dateFrom || filters.dateTo)) {
+        if (!row.dateSet) return false;
+        if (filters.dateFrom && row.dateSet < new Date(filters.dateFrom)) return false;
+        if (filters.dateTo) {
+          const to = new Date(filters.dateTo);
+          to.setHours(23, 59, 59, 999);
+          if (row.dateSet > to) return false;
+        }
+      }
+
+      if (filters.sources.length && (!row.source || !filters.sources.includes(row.source))) return false;
+      if (filters.statuses.length && (!row.status || !filters.statuses.includes(row.status))) return false;
+      if (filters.aes.length && (!row.ae || !filters.aes.includes(row.ae))) return false;
+
+      return true;
+    });
+  }, [rows, filters]);
   const ratioRows = ratioMode === 'all' ? rows : filtered;
 
   const sources = useMemo(() => countBy(rows, 'source').map(([label]) => label), [rows]);
@@ -263,7 +286,7 @@ export default function Dashboard() {
 
         <section className="space-y-4 fade-up">
           <h2 className="text-xl font-semibold">Date Set Charts</h2>
-          <DateSetCharts rows={filtered} groupBy={dateSetGroupBy} onGroupByChange={setDateSetGroupBy} />
+          <DateSetCharts rows={dateSetFiltered} groupBy={dateSetGroupBy} onGroupByChange={setDateSetGroupBy} />
         </section>
 
         <section className="space-y-4 fade-up">
