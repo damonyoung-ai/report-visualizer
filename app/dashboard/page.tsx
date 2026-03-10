@@ -261,7 +261,7 @@ export default function Dashboard() {
         </div>
 
         <div className="fade-up">
-          <QuotaTracker points={quotaPoints} quota={16} />
+          <QuotaTracker points={quotaPoints} quota={22} />
         </div>
 
         <div className="fade-up-delay relative z-[60] overflow-visible">
