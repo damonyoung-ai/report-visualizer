@@ -187,6 +187,19 @@ export default function Dashboard() {
       return total + (source === 'upsell' ? 1 : 2);
     }, 0);
   }, [filtered]);
+  const potentialQuotaPoints = useMemo(() => {
+    return filtered.reduce((total, row) => {
+      const status = (row.status ?? '').trim().toLowerCase();
+      const normalizedStatus = status.replace(/[^a-z]/g, '');
+      const isPotentialStatus =
+        normalizedStatus === 'mtgset' || normalizedStatus.startsWith('mtgcomplete');
+      if (!isPotentialStatus) return total;
+
+      const source = (row.source ?? '').trim().toLowerCase();
+      if (!source) return total;
+      return total + (source === 'upsell' ? 1 : 2);
+    }, 0);
+  }, [filtered]);
 
   if (!rows.length) {
     return (
@@ -261,7 +274,7 @@ export default function Dashboard() {
         </div>
 
         <div className="fade-up">
-          <QuotaTracker points={quotaPoints} quota={22} />
+          <QuotaTracker points={quotaPoints} potentialPoints={potentialQuotaPoints} quota={22} />
         </div>
 
         <div className="fade-up-delay relative z-[60] overflow-visible">
