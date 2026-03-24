@@ -18,7 +18,6 @@ function getTextColor(state: 'under' | 'at' | 'over') {
 
 export default function QuotaTracker({ points, potentialPoints, quota }: Props) {
   const progress = quota > 0 ? Math.min((points / quota) * 100, 100) : 0;
-  const potentialProgress = quota > 0 ? Math.min((potentialPoints / quota) * 100, 100) : 0;
   const remaining = Math.max(quota - points, 0);
   const overage = Math.max(points - quota, 0);
   const potentialRemaining = Math.max(quota - potentialPoints, 0);
@@ -27,7 +26,6 @@ export default function QuotaTracker({ points, potentialPoints, quota }: Props) 
   const potentialState = getState(potentialPoints, quota);
   const barColorClass = getBarColor(state);
   const statusColorClass = getTextColor(state);
-  const potentialBarColorClass = getBarColor(potentialState);
   const potentialStatusColorClass = getTextColor(potentialState);
 
   return (
@@ -56,12 +54,6 @@ export default function QuotaTracker({ points, potentialPoints, quota }: Props) 
               ? 'Goal reached'
               : `${potentialRemaining} remaining`}
         </div>
-      </div>
-      <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-slate/10">
-        <div
-          className={`h-full rounded-full transition-all ${potentialBarColorClass}`}
-          style={{ width: `${potentialProgress}%` }}
-        />
       </div>
       <p className="mt-2 text-xs text-slate/60">
         Scoring: <span className="font-semibold">Upsell = 1</span>, <span className="font-semibold">All other Source values = 2</span>
