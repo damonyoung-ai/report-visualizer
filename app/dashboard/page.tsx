@@ -225,6 +225,7 @@ export default function Dashboard() {
           <div className="flex flex-wrap gap-3">
             <button className="button" onClick={exportDashboard}>Export dashboard as PNG</button>
             <button className="button-outline" onClick={exportCleanedCsv}>Download cleaned CSV</button>
+            <button className="button-outline" onClick={() => router.push('/comparison')}>Open comparison view</button>
             <button
               className="button-outline"
               onClick={() => {

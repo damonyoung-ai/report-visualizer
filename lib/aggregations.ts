@@ -1,7 +1,29 @@
-import { CanonicalRow, Filters } from '../types/sqo';
-import { getDayOfWeek, getIsoWeek, getMonthKey } from './dateUtils';
+import { CanonicalRow, Filters, MonthlyBreakdownRow, MonthlyMetricSummary } from '../types/sqo';
+import { formatMonthLabel, getDayOfWeek, getIsoWeek, getMonthKey } from './dateUtils';
 
 const normalize = (value: string | null) => (value && value.trim() ? value.trim() : null);
+const normalizeStatusKey = (value: string | null) => (normalize(value) ?? '').toLowerCase().replace(/[^a-z]/g, '');
+
+function getQuotaValue(source: string | null) {
+  const normalizedSource = (normalize(source) ?? '').toLowerCase();
+  if (!normalizedSource) return 0;
+  return normalizedSource === 'upsell' ? 1 : 2;
+}
+
+export function getEarnedQuotaPoints(rows: CanonicalRow[]) {
+  return rows.reduce((total, row) => {
+    if (normalizeStatusKey(row.status) !== 'mtgcompletediscocc') return total;
+    return total + getQuotaValue(row.source);
+  }, 0);
+}
+
+export function getPotentialQuotaPoints(rows: CanonicalRow[]) {
+  return rows.reduce((total, row) => {
+    const status = normalizeStatusKey(row.status);
+    if (status !== 'mtgset' && !status.startsWith('mtgcomplete')) return total;
+    return total + getQuotaValue(row.source);
+  }, 0);
+}
 
 export function applyFilters(rows: CanonicalRow[], filters: Filters) {
   return rows.filter((row) => {
@@ -144,4 +166,86 @@ export function stackByStatus(rows: CanonicalRow[], topStatuses: string[]) {
     bucket[key] = (bucket[key] ?? 0) + 1;
   });
   return Array.from(grouped.entries()).map(([name, counts]) => ({ name, ...counts }));
+}
+
+function filterRowsForMonthKey(rows: CanonicalRow[], monthKey: string, dateField: 'meetingDate' | 'dateSet') {
+  return rows.filter((row) => {
+    const value = row[dateField];
+    return value ? getMonthKey(value) === monthKey : false;
+  });
+}
+
+function topBreakdownForMonth(
+  rows: CanonicalRow[],
+  monthKeys: string[],
+  field: 'source' | 'status' | 'ae',
+  topN = 5
+) {
+  const combined = new Map<string, number>();
+  monthKeys.forEach((monthKey) => {
+    filterRowsForMonthKey(rows, monthKey, 'meetingDate').forEach((row) => {
+      const value = normalize(row[field]);
+      if (!value) return;
+      combined.set(value, (combined.get(value) ?? 0) + 1);
+    });
+  });
+
+  const topLabels = Array.from(combined.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, topN)
+    .map(([label]) => label);
+
+  return monthKeys.map((monthKey) => {
+    const monthRows = filterRowsForMonthKey(rows, monthKey, 'meetingDate');
+    const counts = new Map<string, number>();
+    monthRows.forEach((row) => {
+      const value = normalize(row[field]);
+      if (!value) return;
+      const key = topLabels.includes(value) ? value : 'Other';
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    });
+
+    const output: MonthlyBreakdownRow = {
+      monthKey,
+      monthLabel: formatMonthLabel(monthKey),
+    };
+
+    topLabels.forEach((label) => {
+      output[label] = counts.get(label) ?? 0;
+    });
+
+    const otherCount = counts.get('Other') ?? 0;
+    if (otherCount > 0) {
+      output.Other = otherCount;
+    }
+
+    return output;
+  });
+}
+
+export function buildMonthlyMetricSummaries(rows: CanonicalRow[], monthKeys: string[]): MonthlyMetricSummary[] {
+  return monthKeys.map((monthKey) => {
+    const meetingRows = filterRowsForMonthKey(rows, monthKey, 'meetingDate');
+    const dateSetRows = filterRowsForMonthKey(rows, monthKey, 'dateSet');
+
+    return {
+      monthKey,
+      monthLabel: formatMonthLabel(monthKey),
+      earnedPoints: getEarnedQuotaPoints(meetingRows),
+      potentialPoints: getPotentialQuotaPoints(meetingRows),
+      meetings: meetingRows.length,
+      dateSets: dateSetRows.length,
+      sourceTotal: countBy(meetingRows, 'source').reduce((total, [, count]) => total + count, 0),
+      statusTotal: countBy(meetingRows, 'status').reduce((total, [, count]) => total + count, 0),
+      aeTotal: countBy(meetingRows, 'ae').reduce((total, [, count]) => total + count, 0),
+    };
+  });
+}
+
+export function buildMonthlyBreakdowns(rows: CanonicalRow[], monthKeys: string[]) {
+  return {
+    source: topBreakdownForMonth(rows, monthKeys, 'source'),
+    status: topBreakdownForMonth(rows, monthKeys, 'status'),
+    ae: topBreakdownForMonth(rows, monthKeys, 'ae'),
+  };
 }

@@ -9,6 +9,7 @@ type Props = {
   statuses: string[];
   aes: string[];
   onChange: (next: Filters) => void;
+  showDateRange?: boolean;
 };
 
 function MultiSelectDropdown({
@@ -81,49 +82,60 @@ function MultiSelectDropdown({
   );
 }
 
-export default function FilterBar({ filters, sources, statuses, aes, onChange }: Props) {
+export default function FilterBar({
+  filters,
+  sources,
+  statuses,
+  aes,
+  onChange,
+  showDateRange = true,
+}: Props) {
   const update = (patch: Partial<Filters>) => onChange({ ...filters, ...patch });
 
   return (
     <div className="card relative z-[60] overflow-visible p-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
-        <div className="flex flex-col gap-2">
-          <label className="text-xs text-slate/70">Meeting Date From</label>
-          <input
-            type="date"
-            className="input"
-            value={filters.dateFrom ?? ''}
-            disabled={filters.allTime}
-            onChange={(event) => update({ dateFrom: event.target.value, allTime: false })}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-xs text-slate/70">Meeting Date To</label>
-          <input
-            type="date"
-            className="input"
-            value={filters.dateTo ?? ''}
-            disabled={filters.allTime}
-            onChange={(event) => update({ dateTo: event.target.value, allTime: false })}
-          />
-        </div>
-        <div className="flex items-center gap-2 pb-1">
-          <input
-            id="all-time-toggle"
-            type="checkbox"
-            checked={filters.allTime}
-            onChange={(event) =>
-              update(
-                event.target.checked
-                  ? { allTime: true, dateFrom: '', dateTo: '' }
-                  : { allTime: false }
-              )
-            }
-          />
-          <label htmlFor="all-time-toggle" className="text-xs text-slate/70">
-            All Time
-          </label>
-        </div>
+        {showDateRange ? (
+          <>
+            <div className="flex flex-col gap-2">
+              <label className="text-xs text-slate/70">Meeting Date From</label>
+              <input
+                type="date"
+                className="input"
+                value={filters.dateFrom ?? ''}
+                disabled={filters.allTime}
+                onChange={(event) => update({ dateFrom: event.target.value, allTime: false })}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-xs text-slate/70">Meeting Date To</label>
+              <input
+                type="date"
+                className="input"
+                value={filters.dateTo ?? ''}
+                disabled={filters.allTime}
+                onChange={(event) => update({ dateTo: event.target.value, allTime: false })}
+              />
+            </div>
+            <div className="flex items-center gap-2 pb-1">
+              <input
+                id="all-time-toggle"
+                type="checkbox"
+                checked={filters.allTime}
+                onChange={(event) =>
+                  update(
+                    event.target.checked
+                      ? { allTime: true, dateFrom: '', dateTo: '' }
+                      : { allTime: false }
+                  )
+                }
+              />
+              <label htmlFor="all-time-toggle" className="text-xs text-slate/70">
+                All Time
+              </label>
+            </div>
+          </>
+        ) : null}
         <MultiSelectDropdown
           label="Source"
           options={sources}

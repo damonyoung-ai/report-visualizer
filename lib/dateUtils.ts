@@ -42,6 +42,26 @@ export function getMonthKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
 
+export function monthKeyToDate(monthKey: string) {
+  const match = monthKey.match(/^(\d{4})-(\d{2})$/);
+  if (!match) return null;
+  return new Date(Number(match[1]), Number(match[2]) - 1, 1);
+}
+
+export function formatMonthLabel(monthKey: string) {
+  const date = monthKeyToDate(monthKey);
+  if (!date) return monthKey;
+  return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
+
+export function getRelativeMonthKey(offset: number, baseDate = new Date()) {
+  return getMonthKey(new Date(baseDate.getFullYear(), baseDate.getMonth() + offset, 1));
+}
+
+export function getRollingMonthKeys(count: number, baseDate = new Date()) {
+  return Array.from({ length: count }, (_, index) => getRelativeMonthKey(index - count + 1, baseDate));
+}
+
 export function getDayOfWeek(date: Date) {
   return date.toLocaleDateString('en-US', { weekday: 'short' });
 }

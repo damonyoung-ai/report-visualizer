@@ -8,6 +8,7 @@
 
 body {
   @apply bg-mist text-ink;
+  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
 }
 
 .bg-grid {

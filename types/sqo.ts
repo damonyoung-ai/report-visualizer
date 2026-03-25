@@ -27,3 +27,21 @@ export type HeaderDetection = {
   headerRowIndex: number;
   headers: string[];
 };
+
+export type MonthlyMetricSummary = {
+  monthKey: string;
+  monthLabel: string;
+  earnedPoints: number;
+  potentialPoints: number;
+  meetings: number;
+  dateSets: number;
+  sourceTotal: number;
+  statusTotal: number;
+  aeTotal: number;
+};
+
+export type MonthlyBreakdownRow = {
+  monthKey: string;
+  monthLabel: string;
+  [key: string]: string | number;
+};
