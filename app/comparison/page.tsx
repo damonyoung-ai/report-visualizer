@@ -139,8 +139,8 @@ export default function ComparisonPage() {
       <div ref={dashboardRef} className="mx-auto flex max-w-6xl flex-col gap-8">
         <header className="flex flex-col gap-2">
           <p className="section-title">SQO Report Visualizer</p>
-          <h1 className="text-3xl font-semibold">Month-to-Month Comparison</h1>
-          <p className="text-sm text-slate/70">
+          <h1 className="text-3xl font-semibold text-white">Month-to-Month Comparison</h1>
+          <p className="text-sm text-slate-300">
             Default window: {view === 'rolling3' ? 'rolling 3 months' : 'this month vs last month'}
           </p>
           <div className="flex flex-wrap gap-3">
@@ -153,7 +153,7 @@ export default function ComparisonPage() {
             ) : null}
           </div>
           {sheetUrl ? (
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate/60">
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-300">
               <span>Auto-sync enabled</span>
               <span>Last sync: {lastSync ? lastSync.toLocaleTimeString() : '—'}</span>
               <label className="flex items-center gap-2">

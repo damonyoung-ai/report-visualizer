@@ -220,8 +220,8 @@ export default function Dashboard() {
       <div ref={dashboardRef} className="mx-auto flex max-w-6xl flex-col gap-8">
         <header className="flex flex-col gap-2">
           <p className="section-title">SQO Report Visualizer</p>
-          <h1 className="text-3xl font-semibold">Dashboard</h1>
-          <p className="text-sm text-slate/70">Meeting date range: {formatDate(dateRange.min)} → {formatDate(dateRange.max)}</p>
+          <h1 className="text-3xl font-semibold text-white">Dashboard</h1>
+          <p className="text-sm text-slate-300">Meeting date range: {formatDate(dateRange.min)} → {formatDate(dateRange.max)}</p>
           <div className="flex flex-wrap gap-3">
             <button className="button" onClick={exportDashboard}>Export dashboard as PNG</button>
             <button className="button-outline" onClick={exportCleanedCsv}>Download cleaned CSV</button>
@@ -243,7 +243,7 @@ export default function Dashboard() {
             ) : null}
           </div>
           {sheetUrl ? (
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate/60">
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-300">
               <span>Auto-sync enabled</span>
               <span>Last sync: {lastSync ? lastSync.toLocaleTimeString() : '—'}</span>
               <label className="flex items-center gap-2">

@@ -7,33 +7,38 @@
 }
 
 body {
-  @apply bg-mist text-ink;
+  @apply text-ink;
   font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(16, 185, 129, 0.12), transparent 24%),
+    linear-gradient(180deg, #0f172a 0%, #111827 52%, #172033 100%);
 }
 
 .bg-grid {
-  background-image: radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.08) 1px, transparent 0);
+  background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.12) 1px, transparent 0);
   background-size: 22px 22px;
 }
 
 .card {
-  @apply rounded-2xl bg-white/90 shadow-sm ring-1 ring-black/5 backdrop-blur transition hover:-translate-y-0.5 hover:shadow-md;
+  @apply rounded-2xl bg-white shadow-sm ring-1 ring-white/10 backdrop-blur transition hover:-translate-y-0.5 hover:shadow-md;
+  background-color: rgba(255, 255, 255, 0.96);
 }
 
 .section-title {
-  @apply text-xs uppercase tracking-widest text-slate/60;
+  @apply text-xs uppercase tracking-[0.18em] text-blue-200/80;
 }
 
 .input {
-  @apply rounded-lg border border-slate/20 px-3 py-2 text-sm;
+  @apply rounded-lg border border-slate/20 bg-white px-3 py-2 text-sm text-ink;
 }
 
 .button {
-  @apply rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white;
+  @apply rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500;
 }
 
 .button-outline {
-  @apply rounded-xl border border-slate/20 px-4 py-2 text-sm font-semibold text-slate/70;
+  @apply rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white/90 hover:bg-white/15;
 }
 
 .fade-up {

@@ -112,8 +112,8 @@ export default function Home() {
       <div className="mx-auto flex max-w-4xl flex-col gap-8">
         <header className="space-y-2">
           <p className="section-title">SQO Report Visualizer</p>
-          <h1 className="text-4xl font-semibold">Instant SQO dashboard for Source, Status, Meeting Date, A.E.</h1>
-          <p className="text-sm text-slate/70">
+          <h1 className="text-4xl font-semibold text-white">Instant SQO dashboard for Source, Status, Meeting Date, A.E.</h1>
+          <p className="text-sm text-slate-300">
             Upload a Google Sheets export CSV/XLSX. We auto-detect the real header row and clean the data.
           </p>
         </header>
