@@ -221,7 +221,7 @@ export default function Dashboard() {
         <header className="flex flex-col gap-2">
           <p className="section-title">SQO Report Visualizer</p>
           <h1 className="text-3xl font-semibold text-white">Dashboard</h1>
-          <p className="text-sm text-slate-300">Meeting date range: {formatDate(dateRange.min)} → {formatDate(dateRange.max)}</p>
+          <p className="text-sm text-white/80">Meeting date range: {formatDate(dateRange.min)} → {formatDate(dateRange.max)}</p>
           <div className="flex flex-wrap gap-3">
             <button className="button" onClick={exportDashboard}>Export dashboard as PNG</button>
             <button className="button-outline" onClick={exportCleanedCsv}>Download cleaned CSV</button>
@@ -268,22 +268,22 @@ export default function Dashboard() {
         </div>
 
         <section className="space-y-4 fade-up">
-          <h2 className="text-xl font-semibold">Source Charts</h2>
+          <h2 className="text-xl font-semibold text-white">Source Charts</h2>
           <SourceCharts data={sourceCounts} topN={topN} onTopNChange={setTopN} />
         </section>
 
         <section className="space-y-4 fade-up">
-          <h2 className="text-xl font-semibold">Status Charts + Ratios</h2>
+          <h2 className="text-xl font-semibold text-white">Status Charts + Ratios</h2>
           <StatusCharts rows={ratioRows} ratioMode={ratioMode} onRatioModeChange={setRatioMode} />
         </section>
 
         <section className="space-y-4 fade-up">
-          <h2 className="text-xl font-semibold">Date Set Charts</h2>
+          <h2 className="text-xl font-semibold text-white">Date Set Charts</h2>
           <DateSetCharts rows={dateSetFiltered} groupBy={dateSetGroupBy} onGroupByChange={setDateSetGroupBy} />
         </section>
 
         <section className="space-y-4 fade-up">
-          <h2 className="text-xl font-semibold">Meeting Date Charts</h2>
+          <h2 className="text-xl font-semibold text-white">Meeting Date Charts</h2>
           <MeetingDateCharts
             rows={filtered}
             groupBy={groupBy}
@@ -294,7 +294,7 @@ export default function Dashboard() {
         </section>
 
         <section className="space-y-4 fade-up">
-          <h2 className="text-xl font-semibold">A.E. Charts</h2>
+          <h2 className="text-xl font-semibold text-white">A.E. Charts</h2>
           <AeCharts rows={filtered} />
         </section>
 
