@@ -154,14 +154,6 @@ export default function FilterBar({
           selected={filters.aes}
           onChange={(value) => update({ aes: value })}
         />
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={filters.excludeMissing}
-            onChange={(event) => update({ excludeMissing: event.target.checked })}
-          />
-          <span className="text-xs text-slate/70">Exclude missing values</span>
-        </div>
       </div>
     </div>
   );

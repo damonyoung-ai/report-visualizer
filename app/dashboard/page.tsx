@@ -242,27 +242,6 @@ export default function Dashboard() {
               </button>
             ) : null}
           </div>
-          {sheetUrl ? (
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-300">
-              <span>Auto-sync enabled</span>
-              <span>Last sync: {lastSync ? lastSync.toLocaleTimeString() : '—'}</span>
-              <label className="flex items-center gap-2">
-                <input type="checkbox" checked={autoRefresh} onChange={(event) => setAutoRefresh(event.target.checked)} />
-                Auto refresh
-              </label>
-              <label className="flex items-center gap-2">
-                <span>Every</span>
-                <input
-                  type="number"
-                  min={1}
-                  className="input w-16"
-                  value={refreshHours}
-                  onChange={(event) => setRefreshHours(Number(event.target.value))}
-                />
-                <span>hours</span>
-              </label>
-            </div>
-          ) : null}
         </header>
 
         <div className="fade-up">
