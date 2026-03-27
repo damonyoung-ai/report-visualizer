@@ -4,6 +4,7 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recha
 import ChartCard from './ChartCard';
 import { CanonicalRow } from '../types/sqo';
 import { dateSetDayOfWeekDistribution, dateSetSeries } from '../lib/aggregations';
+import { BLUE_SCALE } from '../lib/chartColors';
 import { formatShortMonthDay, formatShortMonthYear, isoWeekToDate } from '../lib/dateUtils';
 
 export default function DateSetCharts({
@@ -56,7 +57,7 @@ export default function DateSetCharts({
               <XAxis dataKey="x" tick={{ fontSize: 11 }} tickFormatter={formatTick} />
               <YAxis />
               <Tooltip cursor={false} />
-              <Bar dataKey="y" fill="#ef4444" radius={[6, 6, 0, 0]} isAnimationActive />
+              <Bar dataKey="y" fill={BLUE_SCALE[4]} radius={[6, 6, 0, 0]} isAnimationActive />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -68,7 +69,7 @@ export default function DateSetCharts({
             <XAxis dataKey="name" tick={{ fontSize: 11 }} />
             <YAxis />
             <Tooltip cursor={false} />
-            <Bar dataKey="value" fill="#f59e0b" radius={[6, 6, 0, 0]} isAnimationActive />
+            <Bar dataKey="value" fill={BLUE_SCALE[1]} radius={[6, 6, 0, 0]} isAnimationActive />
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>

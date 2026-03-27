@@ -3,8 +3,9 @@
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend } from 'recharts';
 import ChartCard from './ChartCard';
 import { topNWithOther } from '../lib/aggregations';
+import { BLUE_SCALE } from '../lib/chartColors';
 
-const COLORS = ['#1f6feb', '#12b981', '#f59e0b', '#ef4444', '#6366f1', '#0ea5e9'];
+const COLORS = BLUE_SCALE;
 
 export default function SourceCharts({
   data,

@@ -3,6 +3,7 @@
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar } from 'recharts';
 import ChartCard from './ChartCard';
 import { meetingDateSeries, dayOfWeekDistribution } from '../lib/aggregations';
+import { BLUE_SCALE } from '../lib/chartColors';
 import { CanonicalRow } from '../types/sqo';
 
 export default function MeetingDateCharts({
@@ -51,7 +52,7 @@ export default function MeetingDateCharts({
             <XAxis dataKey="name" tick={{ fontSize: 11 }} />
             <YAxis />
             <Tooltip cursor={false} />
-            <Bar dataKey="value" fill="#12b981" radius={[6, 6, 0, 0]} isAnimationActive />
+            <Bar dataKey="value" fill={BLUE_SCALE[2]} radius={[6, 6, 0, 0]} isAnimationActive />
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>

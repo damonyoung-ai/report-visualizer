@@ -11,9 +11,8 @@ import {
   YAxis,
 } from 'recharts';
 import ChartCard from './ChartCard';
+import { BLUE_SCALE } from '../lib/chartColors';
 import { MonthlyBreakdownRow } from '../types/sqo';
-
-const PALETTE = ['#2563eb', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4', '#94a3b8'];
 
 function getKeys(rows: MonthlyBreakdownRow[]) {
   const keys = new Set<string>();
@@ -49,7 +48,7 @@ function BreakdownChart({
             <Tooltip cursor={false} />
             <Legend />
             {keys.map((key, index) => (
-              <Bar key={key} dataKey={key} fill={PALETTE[index % PALETTE.length]} radius={[4, 4, 0, 0]} />
+              <Bar key={key} dataKey={key} fill={BLUE_SCALE[index % BLUE_SCALE.length]} radius={[4, 4, 0, 0]} />
             ))}
           </BarChart>
         </ResponsiveContainer>

@@ -3,9 +3,8 @@
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import ChartCard from './ChartCard';
 import { countBy, stackByStatus, topNWithOther } from '../lib/aggregations';
+import { BLUE_SCALE } from '../lib/chartColors';
 import { CanonicalRow } from '../types/sqo';
-
-const COLORS = ['#1f6feb', '#12b981', '#f59e0b', '#ef4444', '#6366f1', '#0ea5e9'];
 
 export default function AeCharts({ rows }: { rows: CanonicalRow[] }) {
   const aeCounts = countBy(rows, 'ae');
@@ -31,7 +30,7 @@ export default function AeCharts({ rows }: { rows: CanonicalRow[] }) {
               />
               <YAxis />
               <Tooltip cursor={false} />
-              <Bar dataKey="value" fill={COLORS[1]} radius={[6, 6, 0, 0]} isAnimationActive />
+              <Bar dataKey="value" fill={BLUE_SCALE[2]} radius={[6, 6, 0, 0]} isAnimationActive />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -53,9 +52,9 @@ export default function AeCharts({ rows }: { rows: CanonicalRow[] }) {
               <Tooltip cursor={false} />
               <Legend />
               {topStatuses.map((status, idx) => (
-                <Bar key={status} dataKey={status} stackId="stack" fill={COLORS[idx % COLORS.length]} isAnimationActive />
+                <Bar key={status} dataKey={status} stackId="stack" fill={BLUE_SCALE[idx % BLUE_SCALE.length]} isAnimationActive />
               ))}
-              <Bar dataKey="Other" stackId="stack" fill="#9ca3af" isAnimationActive />
+              <Bar dataKey="Other" stackId="stack" fill={BLUE_SCALE[BLUE_SCALE.length - 1]} isAnimationActive />
             </BarChart>
           </ResponsiveContainer>
         </div>

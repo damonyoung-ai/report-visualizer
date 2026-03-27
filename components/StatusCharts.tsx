@@ -3,9 +3,8 @@
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import ChartCard from './ChartCard';
 import { ratioTable, rollupStatus } from '../lib/aggregations';
+import { BLUE_SCALE } from '../lib/chartColors';
 import { CanonicalRow } from '../types/sqo';
-
-const COLORS = ['#1f6feb', '#12b981', '#f59e0b', '#ef4444', '#6366f1', '#0ea5e9'];
 
 export default function StatusCharts({
   rows,
@@ -62,7 +61,7 @@ export default function StatusCharts({
                 <XAxis dataKey="name" interval={0} height={80} tick={wrappedTick} />
                 <YAxis />
                 <Tooltip cursor={false} />
-                <Bar dataKey="value" fill={COLORS[2]} radius={[6, 6, 0, 0]} isAnimationActive />
+                <Bar dataKey="value" fill={BLUE_SCALE[3]} radius={[6, 6, 0, 0]} isAnimationActive />
               </BarChart>
             </ResponsiveContainer>
           </div>

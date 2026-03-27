@@ -13,13 +13,14 @@ import {
   YAxis,
 } from 'recharts';
 import ChartCard from './ChartCard';
+import { BLUE_SCALE } from '../lib/chartColors';
 import { MonthlyMetricSummary } from '../types/sqo';
 
 const COLORS = {
   earned: '#2563eb',
   potential: '#f59e0b',
-  meetings: '#0f766e',
-  sets: '#7c3aed',
+  meetings: BLUE_SCALE[2],
+  sets: BLUE_SCALE[5],
   source: '#1d4ed8',
   status: '#dc2626',
   ae: '#059669',
