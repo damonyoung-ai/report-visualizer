@@ -1,6 +1,6 @@
 'use client';
 
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend } from 'recharts';
 import ChartCard from './ChartCard';
 import { topNWithOther } from '../lib/aggregations';
 
@@ -16,8 +16,6 @@ export default function SourceCharts({
   onTopNChange: (value: number) => void;
 }) {
   const trimmed = topNWithOther(data, topN).map(([name, value]) => ({ name, value }));
-  const labelRenderer = ({ name, percent }: { name: string; percent: number }) =>
-    `${name} ${(percent * 100).toFixed(0)}%`;
   const wrappedTick = ({ x, y, payload }: { x: number; y: number; payload?: { value: string } }) => {
     const value = payload?.value ?? '';
     const words = String(value).split(' ');
@@ -73,14 +71,13 @@ export default function SourceCharts({
         <ResponsiveContainer width="100%" height={320}>
           <PieChart>
             <Tooltip cursor={false} />
+            <Legend verticalAlign="bottom" height={48} />
             <Pie
               data={trimmed}
               dataKey="value"
               nameKey="name"
               outerRadius={110}
               innerRadius={50}
-              label={labelRenderer}
-              labelLine={false}
               isAnimationActive
             >
               {trimmed.map((_, idx) => (

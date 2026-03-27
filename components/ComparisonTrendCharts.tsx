@@ -55,21 +55,6 @@ export default function ComparisonTrendCharts({ summaries }: { summaries: Monthl
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>
-
-      <ChartCard title="Coverage Trend" subtitle="Tracked row totals">
-        <ResponsiveContainer width="100%" height={320}>
-          <LineChart data={summaries} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis dataKey="monthLabel" />
-            <YAxis />
-            <Tooltip cursor={false} />
-            <Legend />
-            <Line type="monotone" dataKey="sourceTotal" name="Source Rows" stroke={COLORS.source} strokeWidth={3} dot={{ r: 4 }} />
-            <Line type="monotone" dataKey="statusTotal" name="Status Rows" stroke={COLORS.status} strokeWidth={3} dot={{ r: 4 }} />
-            <Line type="monotone" dataKey="aeTotal" name="A.E. Rows" stroke={COLORS.ae} strokeWidth={3} dot={{ r: 4 }} />
-          </LineChart>
-        </ResponsiveContainer>
-      </ChartCard>
     </div>
   );
 }
