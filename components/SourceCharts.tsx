@@ -16,6 +16,7 @@ export default function SourceCharts({
   onTopNChange: (value: number) => void;
 }) {
   const trimmed = topNWithOther(data, topN).map(([name, value]) => ({ name, value }));
+  const total = trimmed.reduce((sum, item) => sum + item.value, 0) || 1;
   const wrappedTick = ({ x, y, payload }: { x: number; y: number; payload?: { value: string } }) => {
     const value = payload?.value ?? '';
     const words = String(value).split(' ');
@@ -71,7 +72,15 @@ export default function SourceCharts({
         <ResponsiveContainer width="100%" height={320}>
           <PieChart>
             <Tooltip cursor={false} />
-            <Legend verticalAlign="bottom" height={48} />
+            <Legend
+              verticalAlign="bottom"
+              height={64}
+              formatter={(value) => {
+                const item = trimmed.find((entry) => entry.name === value);
+                const percent = item ? (item.value / total) * 100 : 0;
+                return `${value} (${percent.toFixed(1)}%)`;
+              }}
+            />
             <Pie
               data={trimmed}
               dataKey="value"
