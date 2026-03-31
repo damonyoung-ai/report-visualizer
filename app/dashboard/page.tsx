@@ -148,6 +148,29 @@ export default function Dashboard() {
   };
 
   const filtered = useMemo(() => applyFilters(rows, filters), [rows, filters]);
+  const statusFiltered = useMemo(() => {
+    return rows.filter((row) => {
+      if (filters.excludeMissing) {
+        if (!row.meetingDate || !row.status) return false;
+      }
+
+      if (!filters.allTime && (filters.dateFrom || filters.dateTo)) {
+        if (!row.meetingDate) return false;
+        if (filters.dateFrom && row.meetingDate < new Date(filters.dateFrom)) return false;
+        if (filters.dateTo) {
+          const to = new Date(filters.dateTo);
+          to.setHours(23, 59, 59, 999);
+          if (row.meetingDate > to) return false;
+        }
+      }
+
+      if (filters.sources.length && (!row.source || !filters.sources.includes(row.source))) return false;
+      if (filters.statuses.length && (!row.status || !filters.statuses.includes(row.status))) return false;
+      if (filters.aes.length && (!row.ae || !filters.aes.includes(row.ae))) return false;
+
+      return true;
+    });
+  }, [rows, filters]);
   const dateSetFiltered = useMemo(() => {
     return rows.filter((row) => {
       if (filters.excludeMissing) {
@@ -171,7 +194,7 @@ export default function Dashboard() {
       return true;
     });
   }, [rows, filters]);
-  const ratioRows = ratioMode === 'all' ? rows : filtered;
+  const ratioRows = ratioMode === 'all' ? rows.filter((row) => !!row.status) : statusFiltered;
 
   const sources = useMemo(() => countBy(rows, 'source').map(([label]) => label), [rows]);
   const statuses = useMemo(() => countBy(rows, 'status').map(([label]) => label), [rows]);
@@ -191,7 +214,7 @@ export default function Dashboard() {
   }, [filtered]);
 
   const sourceCounts = useMemo(() => countBy(filtered, 'source'), [filtered]);
-  const statusCounts = useMemo(() => countBy(filtered, 'status'), [filtered]);
+  const statusCounts = useMemo(() => countBy(statusFiltered, 'status'), [statusFiltered]);
   const aeCounts = useMemo(() => countBy(filtered, 'ae'), [filtered]);
   const quotaPoints = useMemo(() => {
     return filtered.reduce((total, row) => {
@@ -222,8 +245,8 @@ export default function Dashboard() {
     const topSource = sourceCounts[0];
     const topStatus = statusCounts[0];
     const topAe = aeCounts[0];
-    const completeCount = filtered.filter((row) => (row.status ?? '').toLowerCase().startsWith('mtg. complete')).length;
-    const completeRate = filtered.length ? (completeCount / filtered.length) * 100 : 0;
+    const completeCount = statusFiltered.filter((row) => (row.status ?? '').toLowerCase().startsWith('mtg. complete')).length;
+    const completeRate = statusFiltered.length ? (completeCount / statusFiltered.length) * 100 : 0;
     const dateSetCount = dateSetFiltered.length;
 
     return [
@@ -232,13 +255,13 @@ export default function Dashboard() {
         ? `${topSource[0]} is the largest source with ${topSource[1]} meetings in the selected range.`
         : 'No source activity is available in the selected range.',
       topStatus
-        ? `${topStatus[0]} is the most common status at ${topStatus[1]} meetings, while Mtg. Complete statuses represent ${completeRate.toFixed(1)}% of the filtered set.`
+        ? `${topStatus[0]} is the most common status at ${topStatus[1]} meetings, while Mtg. Complete statuses represent ${completeRate.toFixed(1)}% of the status-count set.`
         : 'No status activity is available in the selected range.',
       topAe
         ? `${topAe[0]} has the highest meeting volume with ${topAe[1]} meetings. Date Set charts are tracking ${dateSetCount} qualifying set records for the same filters.`
         : 'No A.E. ownership data is available in the selected range.',
     ];
-  }, [aeCounts, dateSetFiltered.length, filtered, potentialQuotaPoints, quotaPoints, sourceCounts, statusCounts]);
+  }, [aeCounts, dateSetFiltered.length, filtered.length, potentialQuotaPoints, quotaPoints, sourceCounts, statusCounts, statusFiltered, topN]);
 
   if (!rows.length) {
     return (
