@@ -282,10 +282,6 @@ export default function Dashboard() {
           <QuotaTracker points={quotaPoints} potentialPoints={potentialQuotaPoints} quota={22} />
         </div>
 
-        <div className="fade-up">
-          <DashboardSummary title="What This Dashboard Shows" items={dashboardSummaryItems} />
-        </div>
-
         <div className="fade-up-delay relative z-[60] overflow-visible">
           <FilterBar
             filters={filters}
@@ -329,6 +325,10 @@ export default function Dashboard() {
 
         <div className="fade-up">
           <DataPreviewTable rows={filtered} />
+        </div>
+
+        <div className="fade-up">
+          <DashboardSummary title="What This Dashboard Shows" items={dashboardSummaryItems} />
         </div>
       </div>
     </main>

@@ -299,7 +299,6 @@ export default function SalesforcePage() {
               closedWonCommissionable={closedWonCommissionable}
               closedWonTcv={closedWonTcv}
             />
-            <DashboardSummary title="What This Combined View Says" items={salesforceSummaryItems} />
             <SalesforceCharts
               ownerCommissionable={ownerCommissionable}
               ownerTcv={ownerTcv}
@@ -308,6 +307,7 @@ export default function SalesforcePage() {
               monthlySqoMeetings={monthlySqoMeetings}
               closedWonRoleTotals={closedWonRoleTotals}
             />
+            <DashboardSummary title="What This Combined View Says" items={salesforceSummaryItems} />
           </>
         ) : (
           <div className="card p-6">

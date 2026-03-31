@@ -197,10 +197,6 @@ export default function ComparisonPage() {
         </div>
 
         <div className="fade-up">
-          <DashboardSummary title="What Changed Month to Month" items={comparisonSummaryItems} />
-        </div>
-
-        <div className="fade-up">
           <ComparisonTrendCharts summaries={summaries} />
         </div>
 
@@ -210,6 +206,10 @@ export default function ComparisonPage() {
             statusRows={breakdowns.status}
             aeRows={breakdowns.ae}
           />
+        </div>
+
+        <div className="fade-up">
+          <DashboardSummary title="What Changed Month to Month" items={comparisonSummaryItems} />
         </div>
       </div>
     </main>
