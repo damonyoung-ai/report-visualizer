@@ -45,3 +45,21 @@ export type MonthlyBreakdownRow = {
   monthLabel: string;
   [key: string]: string | number;
 };
+
+export type SalesforceOpenOppRow = {
+  opportunityOwner: string | null;
+  accountName: string | null;
+  commissionableAmount: number;
+  tcv: number;
+  closeDate: Date | null;
+  nextStep: string | null;
+  type: string | null;
+  gtmRole: string | null;
+};
+
+export type SalesforceClosedWonRow = {
+  accountName: string | null;
+  commissionableAmount: number;
+  tcv: number;
+  gtmRole: string | null;
+};
