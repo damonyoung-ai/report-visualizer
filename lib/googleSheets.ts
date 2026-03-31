@@ -11,22 +11,27 @@ export function buildCsvExportUrl(sheetUrl: string): string | null {
   return url.toString();
 }
 
-export async function fetchSheetGrid(sheetUrl: string): Promise<string[][]> {
+export async function fetchSheetGrid(
+  sheetUrl: string,
+  options?: { bypassCache?: boolean }
+): Promise<string[][]> {
   const exportUrl = buildCsvExportUrl(sheetUrl);
   if (!exportUrl) {
     throw new Error('Invalid Google Sheets URL.');
   }
   const cacheKey = `sqo-sheet-cache:${exportUrl}`;
-  try {
-    const cached = sessionStorage.getItem(cacheKey);
-    if (cached) {
-      const parsed = JSON.parse(cached) as { ts: number; text: string };
-      if (Date.now() - parsed.ts < 60_000) {
-        return parseCsvTextToGrid(parsed.text);
+  if (!options?.bypassCache) {
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached) as { ts: number; text: string };
+        if (Date.now() - parsed.ts < 60_000) {
+          return parseCsvTextToGrid(parsed.text);
+        }
       }
+    } catch {
+      // ignore cache errors
     }
-  } catch {
-    // ignore cache errors
   }
   const response = await fetch(exportUrl);
   if (!response.ok) {

@@ -78,9 +78,24 @@ export default function ComparisonPage() {
     if (!sheetUrl) return;
     setSyncing(true);
     try {
-      const grid = await fetchSheetGrid(sheetUrl);
+      const grid = await fetchSheetGrid(sheetUrl, { bypassCache: true });
       const cleaned = cleanDataset(grid);
       setRows(cleaned.rows);
+      sessionStorage.setItem(
+        'sqo-dataset',
+        JSON.stringify({
+          rows: cleaned.rows.map((row) => ({
+            dateSet: row.dateSet ? row.dateSet.toISOString() : null,
+            meetingDate: row.meetingDate ? row.meetingDate.toISOString() : null,
+            source: row.source,
+            status: row.status,
+            ae: row.ae,
+            raw: row.raw,
+          })),
+          rawHeaders: cleaned.rawHeaders,
+          canonicalHeaders: cleaned.canonicalHeaders,
+        })
+      );
       setLastSync(new Date());
     } catch {
       // keep existing dataset on sync failures
