@@ -12,6 +12,7 @@ import DateSetCharts from '../../components/DateSetCharts';
 import AeCharts from '../../components/AeCharts';
 import DataPreviewTable from '../../components/DataPreviewTable';
 import QuotaTracker from '../../components/QuotaTracker';
+import DashboardSummary from '../../components/DashboardSummary';
 import { applyFilters, countBy } from '../../lib/aggregations';
 import { formatDate } from '../../lib/dateUtils';
 import { fetchSheetGrid } from '../../lib/googleSheets';
@@ -175,6 +176,8 @@ export default function Dashboard() {
   }, [filtered]);
 
   const sourceCounts = useMemo(() => countBy(filtered, 'source'), [filtered]);
+  const statusCounts = useMemo(() => countBy(filtered, 'status'), [filtered]);
+  const aeCounts = useMemo(() => countBy(filtered, 'ae'), [filtered]);
   const quotaPoints = useMemo(() => {
     return filtered.reduce((total, row) => {
       const status = (row.status ?? '').trim().toLowerCase();
@@ -200,6 +203,27 @@ export default function Dashboard() {
       return total + (source === 'upsell' ? 1 : 2);
     }, 0);
   }, [filtered]);
+  const dashboardSummaryItems = useMemo(() => {
+    const topSource = sourceCounts[0];
+    const topStatus = statusCounts[0];
+    const topAe = aeCounts[0];
+    const completeCount = filtered.filter((row) => (row.status ?? '').toLowerCase().startsWith('mtg. complete')).length;
+    const completeRate = filtered.length ? (completeCount / filtered.length) * 100 : 0;
+    const dateSetCount = dateSetFiltered.length;
+
+    return [
+      `${filtered.length} meetings are in the current view. ${quotaPoints} points are earned and ${potentialQuotaPoints} are currently in play against a quota of 22.`,
+      topSource
+        ? `${topSource[0]} is the largest source with ${topSource[1]} meetings in the selected range.`
+        : 'No source activity is available in the selected range.',
+      topStatus
+        ? `${topStatus[0]} is the most common status at ${topStatus[1]} meetings, while Mtg. Complete statuses represent ${completeRate.toFixed(1)}% of the filtered set.`
+        : 'No status activity is available in the selected range.',
+      topAe
+        ? `${topAe[0]} has the highest meeting volume with ${topAe[1]} meetings. Date Set charts are tracking ${dateSetCount} qualifying set records for the same filters.`
+        : 'No A.E. ownership data is available in the selected range.',
+    ];
+  }, [aeCounts, dateSetFiltered.length, filtered, potentialQuotaPoints, quotaPoints, sourceCounts, statusCounts]);
 
   if (!rows.length) {
     return (
@@ -256,6 +280,10 @@ export default function Dashboard() {
 
         <div className="fade-up">
           <QuotaTracker points={quotaPoints} potentialPoints={potentialQuotaPoints} quota={22} />
+        </div>
+
+        <div className="fade-up">
+          <DashboardSummary title="What This Dashboard Shows" items={dashboardSummaryItems} />
         </div>
 
         <div className="fade-up-delay relative z-[60] overflow-visible">

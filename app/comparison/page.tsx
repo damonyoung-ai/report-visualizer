@@ -8,6 +8,7 @@ import ComparisonModeCard, { ComparisonView } from '../../components/ComparisonM
 import ComparisonSummary from '../../components/ComparisonSummary';
 import ComparisonTrendCharts from '../../components/ComparisonTrendCharts';
 import ComparisonBreakdowns from '../../components/ComparisonBreakdowns';
+import DashboardSummary from '../../components/DashboardSummary';
 import { buildMonthlyBreakdowns, buildMonthlyMetricSummaries, applyFilters, countBy } from '../../lib/aggregations';
 import { fetchSheetGrid } from '../../lib/googleSheets';
 import { cleanDataset } from '../../lib/cleanDataset';
@@ -115,6 +116,28 @@ export default function ComparisonPage() {
   const breakdowns = useMemo(() => buildMonthlyBreakdowns(filtered, monthKeys), [filtered, monthKeys]);
   const current = summaries[summaries.length - 1];
   const previous = summaries.length > 1 ? summaries[summaries.length - 2] : null;
+  const comparisonSummaryItems = useMemo(() => {
+    const deltaPoints = previous ? current.earnedPoints - previous.earnedPoints : 0;
+    const deltaMeetings = previous ? current.meetings - previous.meetings : 0;
+    const deltaSets = previous ? current.dateSets - previous.dateSets : 0;
+    const strongestSource = breakdowns.source
+      .flatMap((row) => Object.entries(row).filter(([key]) => key !== 'monthKey' && key !== 'monthLabel'))
+      .reduce<{ label: string; value: number } | null>((best, [label, value]) => {
+        const numeric = typeof value === 'number' ? value : Number(value);
+        if (!best || numeric > best.value) return { label, value: numeric };
+        return best;
+      }, null);
+
+    return [
+      `${current.monthLabel} closed at ${current.earnedPoints} earned points, ${current.potentialPoints} potential points, and ${current.meetings} meetings.`,
+      previous
+        ? `Versus ${previous.monthLabel}, earned points changed by ${deltaPoints >= 0 ? '+' : ''}${deltaPoints}, meetings changed by ${deltaMeetings >= 0 ? '+' : ''}${deltaMeetings}, and date sets changed by ${deltaSets >= 0 ? '+' : ''}${deltaSets}.`
+        : 'There is no prior month in the selected comparison window.',
+      strongestSource
+        ? `${strongestSource.label} is the single strongest monthly breakdown item visible in the current comparison charts with a peak month count of ${strongestSource.value}.`
+        : 'No monthly source breakdown is available for the current filters.',
+    ];
+  }, [breakdowns.source, current, previous]);
 
   const sources = useMemo(() => countBy(rows, 'source').map(([label]) => label), [rows]);
   const statuses = useMemo(() => countBy(rows, 'status').map(([label]) => label), [rows]);
@@ -171,6 +194,10 @@ export default function ComparisonPage() {
 
         <div className="fade-up">
           <ComparisonSummary current={current} previous={previous} />
+        </div>
+
+        <div className="fade-up">
+          <DashboardSummary title="What Changed Month to Month" items={comparisonSummaryItems} />
         </div>
 
         <div className="fade-up">

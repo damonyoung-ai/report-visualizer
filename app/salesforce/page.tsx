@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import SalesforceReportUploader from '../../components/SalesforceReportUploader';
 import SalesforceOverview from '../../components/SalesforceOverview';
 import SalesforceCharts from '../../components/SalesforceCharts';
+import DashboardSummary from '../../components/DashboardSummary';
 import { parseCsvToGrid, parseXlsxToGrid } from '../../lib/parseFile';
 import {
   filterRowsByPeriod,
@@ -200,6 +201,32 @@ export default function SalesforcePage() {
   );
 
   const hasSalesforceData = openOpps.length > 0 || closedWon.length > 0;
+  const salesforceSummaryItems = useMemo(() => {
+    const topOwner = ownerCommissionable[0];
+    const topType = typeCounts[0];
+    const topClosedRole = closedWonRoleTotals[0];
+
+    return [
+      `For the selected period, SQO is showing ${sqoMeetings} meetings and ${sqoEarnedPoints} earned points alongside ${openOppCommissionable.toFixed(0)} in open commissionable pipeline and ${openOppTcv.toFixed(0)} in open TCV.`,
+      topOwner
+        ? `${topOwner.name} owns the largest open pipeline by commissionable amount at ${topOwner.value.toFixed(0)}.`
+        : 'No open pipeline owner data is available for the current period.',
+      topType
+        ? `${topType.name} is the most common open opportunity type with ${topType.value} records in the filtered pipeline.`
+        : 'No open opportunity type data is available for the current period.',
+      topClosedRole
+        ? `${topClosedRole.name} contributes the most closed won commissionable amount at ${topClosedRole.value.toFixed(0)} in the uploaded closed won export.`
+        : 'No closed won role data is available in the uploaded export.',
+    ];
+  }, [
+    closedWonRoleTotals,
+    openOppCommissionable,
+    openOppTcv,
+    ownerCommissionable,
+    sqoEarnedPoints,
+    sqoMeetings,
+    typeCounts,
+  ]);
 
   return (
     <main className="min-h-screen bg-grid px-6 py-8">
@@ -272,6 +299,7 @@ export default function SalesforcePage() {
               closedWonCommissionable={closedWonCommissionable}
               closedWonTcv={closedWonTcv}
             />
+            <DashboardSummary title="What This Combined View Says" items={salesforceSummaryItems} />
             <SalesforceCharts
               ownerCommissionable={ownerCommissionable}
               ownerTcv={ownerTcv}
