@@ -1,4 +1,4 @@
-import { CanonicalRow, Filters, MonthlyBreakdownRow, MonthlyMetricSummary } from '../types/sqo';
+import { CanonicalRow, Filters, MonthlyBreakdownRow, MonthlyMetricSummary, QuotaExclusion } from '../types/sqo';
 import { formatMonthLabel, getDayOfWeek, getIsoWeek, getMonthKey } from './dateUtils';
 
 const normalize = (value: string | null) => (value && value.trim() ? value.trim() : null);
@@ -23,6 +23,10 @@ export function getPotentialQuotaPoints(rows: CanonicalRow[]) {
     if (status !== 'mtgset' && !status.startsWith('mtgcomplete')) return total;
     return total + getQuotaValue(row.source);
   }, 0);
+}
+
+export function isExactDiscOccStatus(value: string | null) {
+  return normalizeStatusKey(value) === 'mtgcompletediscocc';
 }
 
 export function applyFilters(rows: CanonicalRow[], filters: Filters) {
@@ -70,6 +74,50 @@ export function applyQuotaFilters(rows: CanonicalRow[], filters: Filters) {
     if (filters.aes.length && (!row.ae || !filters.aes.includes(row.ae))) return false;
 
     return true;
+  });
+}
+
+export function getQuotaExclusions(rows: CanonicalRow[], filters: Filters): QuotaExclusion[] {
+  return rows.flatMap((row) => {
+    if (!isExactDiscOccStatus(row.status)) return [];
+
+    const reasons: string[] = [];
+
+    if (filters.excludeMissing) {
+      if (!row.meetingDate) reasons.push('Missing Meeting Date');
+      if (!row.source) reasons.push('Missing Source');
+      if (!row.status) reasons.push('Missing Status');
+    }
+
+    if (!filters.allTime && (filters.dateFrom || filters.dateTo)) {
+      if (!row.meetingDate) {
+        if (!reasons.includes('Missing Meeting Date')) reasons.push('Missing Meeting Date');
+      } else {
+        if (filters.dateFrom && row.meetingDate < new Date(filters.dateFrom)) reasons.push('Before selected date range');
+        if (filters.dateTo) {
+          const to = new Date(filters.dateTo);
+          to.setHours(23, 59, 59, 999);
+          if (row.meetingDate > to) reasons.push('After selected date range');
+        }
+      }
+    }
+
+    if (filters.sources.length) {
+      if (!row.source) reasons.push('Missing Source for active Source filter');
+      else if (!filters.sources.includes(row.source)) reasons.push('Excluded by Source filter');
+    }
+
+    if (filters.statuses.length) {
+      if (!row.status) reasons.push('Missing Status for active Status filter');
+      else if (!filters.statuses.includes(row.status)) reasons.push('Excluded by Status filter');
+    }
+
+    if (filters.aes.length) {
+      if (!row.ae) reasons.push('Missing A.E. for active A.E. filter');
+      else if (!filters.aes.includes(row.ae)) reasons.push('Excluded by A.E. filter');
+    }
+
+    return reasons.length ? [{ row, reasons }] : [];
   });
 }
 

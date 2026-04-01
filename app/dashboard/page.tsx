@@ -13,7 +13,8 @@ import AeCharts from '../../components/AeCharts';
 import DataPreviewTable from '../../components/DataPreviewTable';
 import QuotaTracker from '../../components/QuotaTracker';
 import DashboardSummary from '../../components/DashboardSummary';
-import { applyFilters, applyQuotaFilters, countBy } from '../../lib/aggregations';
+import QuotaDebugCard from '../../components/QuotaDebugCard';
+import { applyFilters, applyQuotaFilters, countBy, getQuotaExclusions } from '../../lib/aggregations';
 import { formatDate } from '../../lib/dateUtils';
 import { fetchSheetGrid } from '../../lib/googleSheets';
 import { cleanDataset } from '../../lib/cleanDataset';
@@ -277,6 +278,7 @@ export default function Dashboard() {
       return total + (source === 'upsell' ? 1 : 2);
     }, 0);
   }, [quotaFiltered]);
+  const quotaExclusions = useMemo(() => getQuotaExclusions(rows, filters), [rows, filters]);
   const dashboardSummaryItems = useMemo(() => {
     const topSource = sourceCounts[0];
     const topStatus = statusCounts[0];
@@ -346,6 +348,10 @@ export default function Dashboard() {
 
         <div className="fade-up">
           <QuotaTracker points={quotaPoints} potentialPoints={potentialQuotaPoints} quota={22} />
+        </div>
+
+        <div className="fade-up">
+          <QuotaDebugCard exclusions={quotaExclusions} />
         </div>
 
         <div className="fade-up-delay relative z-[60] overflow-visible">
