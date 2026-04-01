@@ -29,6 +29,24 @@ export function formatDate(value: Date | null) {
   return value.toLocaleDateString();
 }
 
+export function parseFilterDate(value: string) {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return new Date(value);
+  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+}
+
+export function getFilterDateStart(value: string) {
+  const date = parseFilterDate(value);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+export function getFilterDateEnd(value: string) {
+  const date = parseFilterDate(value);
+  date.setHours(23, 59, 59, 999);
+  return date;
+}
+
 export function getIsoWeek(date: Date) {
   const copy = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const dayNum = copy.getUTCDay() || 7;

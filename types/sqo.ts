@@ -63,8 +63,3 @@ export type SalesforceClosedWonRow = {
   tcv: number;
   gtmRole: string | null;
 };
-
-export type QuotaExclusion = {
-  row: CanonicalRow;
-  reasons: string[];
-};

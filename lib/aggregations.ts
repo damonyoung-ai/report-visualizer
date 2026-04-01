@@ -1,5 +1,5 @@
-import { CanonicalRow, Filters, MonthlyBreakdownRow, MonthlyMetricSummary, QuotaExclusion } from '../types/sqo';
-import { formatMonthLabel, getDayOfWeek, getIsoWeek, getMonthKey } from './dateUtils';
+import { CanonicalRow, Filters, MonthlyBreakdownRow, MonthlyMetricSummary } from '../types/sqo';
+import { formatMonthLabel, getDayOfWeek, getFilterDateEnd, getFilterDateStart, getIsoWeek, getMonthKey } from './dateUtils';
 
 const normalize = (value: string | null) => (value && value.trim() ? value.trim() : null);
 const normalizeStatusKey = (value: string | null) => (normalize(value) ?? '').toLowerCase().replace(/[^a-z]/g, '');
@@ -37,10 +37,9 @@ export function applyFilters(rows: CanonicalRow[], filters: Filters) {
 
     if (!filters.allTime && (filters.dateFrom || filters.dateTo)) {
       if (!row.meetingDate) return false;
-      if (filters.dateFrom && row.meetingDate < new Date(filters.dateFrom)) return false;
+      if (filters.dateFrom && row.meetingDate < getFilterDateStart(filters.dateFrom)) return false;
       if (filters.dateTo) {
-        const to = new Date(filters.dateTo);
-        to.setHours(23, 59, 59, 999);
+        const to = getFilterDateEnd(filters.dateTo);
         if (row.meetingDate > to) return false;
       }
     }
@@ -61,10 +60,9 @@ export function applyQuotaFilters(rows: CanonicalRow[], filters: Filters) {
 
     if (!filters.allTime && (filters.dateFrom || filters.dateTo)) {
       if (!row.meetingDate) return false;
-      if (filters.dateFrom && row.meetingDate < new Date(filters.dateFrom)) return false;
+      if (filters.dateFrom && row.meetingDate < getFilterDateStart(filters.dateFrom)) return false;
       if (filters.dateTo) {
-        const to = new Date(filters.dateTo);
-        to.setHours(23, 59, 59, 999);
+        const to = getFilterDateEnd(filters.dateTo);
         if (row.meetingDate > to) return false;
       }
     }
@@ -74,50 +72,6 @@ export function applyQuotaFilters(rows: CanonicalRow[], filters: Filters) {
     if (filters.aes.length && (!row.ae || !filters.aes.includes(row.ae))) return false;
 
     return true;
-  });
-}
-
-export function getQuotaExclusions(rows: CanonicalRow[], filters: Filters): QuotaExclusion[] {
-  return rows.flatMap((row) => {
-    if (!isExactDiscOccStatus(row.status)) return [];
-
-    const reasons: string[] = [];
-
-    if (filters.excludeMissing) {
-      if (!row.meetingDate) reasons.push('Missing Meeting Date');
-      if (!row.source) reasons.push('Missing Source');
-      if (!row.status) reasons.push('Missing Status');
-    }
-
-    if (!filters.allTime && (filters.dateFrom || filters.dateTo)) {
-      if (!row.meetingDate) {
-        if (!reasons.includes('Missing Meeting Date')) reasons.push('Missing Meeting Date');
-      } else {
-        if (filters.dateFrom && row.meetingDate < new Date(filters.dateFrom)) reasons.push('Before selected date range');
-        if (filters.dateTo) {
-          const to = new Date(filters.dateTo);
-          to.setHours(23, 59, 59, 999);
-          if (row.meetingDate > to) reasons.push('After selected date range');
-        }
-      }
-    }
-
-    if (filters.sources.length) {
-      if (!row.source) reasons.push('Missing Source for active Source filter');
-      else if (!filters.sources.includes(row.source)) reasons.push('Excluded by Source filter');
-    }
-
-    if (filters.statuses.length) {
-      if (!row.status) reasons.push('Missing Status for active Status filter');
-      else if (!filters.statuses.includes(row.status)) reasons.push('Excluded by Status filter');
-    }
-
-    if (filters.aes.length) {
-      if (!row.ae) reasons.push('Missing A.E. for active A.E. filter');
-      else if (!filters.aes.includes(row.ae)) reasons.push('Excluded by A.E. filter');
-    }
-
-    return reasons.length ? [{ row, reasons }] : [];
   });
 }
 

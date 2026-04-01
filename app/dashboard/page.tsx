@@ -13,9 +13,8 @@ import AeCharts from '../../components/AeCharts';
 import DataPreviewTable from '../../components/DataPreviewTable';
 import QuotaTracker from '../../components/QuotaTracker';
 import DashboardSummary from '../../components/DashboardSummary';
-import QuotaDebugCard from '../../components/QuotaDebugCard';
-import { applyFilters, applyQuotaFilters, countBy, getQuotaExclusions } from '../../lib/aggregations';
-import { formatDate } from '../../lib/dateUtils';
+import { applyFilters, applyQuotaFilters, countBy } from '../../lib/aggregations';
+import { formatDate, getFilterDateEnd, getFilterDateStart } from '../../lib/dateUtils';
 import { fetchSheetGrid } from '../../lib/googleSheets';
 import { cleanDataset } from '../../lib/cleanDataset';
 import { CanonicalRow, Filters } from '../../types/sqo';
@@ -193,10 +192,9 @@ export default function Dashboard() {
 
       if (!filters.allTime && (filters.dateFrom || filters.dateTo)) {
         if (!row.meetingDate) return false;
-        if (filters.dateFrom && row.meetingDate < new Date(filters.dateFrom)) return false;
+        if (filters.dateFrom && row.meetingDate < getFilterDateStart(filters.dateFrom)) return false;
         if (filters.dateTo) {
-          const to = new Date(filters.dateTo);
-          to.setHours(23, 59, 59, 999);
+          const to = getFilterDateEnd(filters.dateTo);
           if (row.meetingDate > to) return false;
         }
       }
@@ -216,10 +214,9 @@ export default function Dashboard() {
 
       if (!filters.allTime && (filters.dateFrom || filters.dateTo)) {
         if (!row.dateSet) return false;
-        if (filters.dateFrom && row.dateSet < new Date(filters.dateFrom)) return false;
+        if (filters.dateFrom && row.dateSet < getFilterDateStart(filters.dateFrom)) return false;
         if (filters.dateTo) {
-          const to = new Date(filters.dateTo);
-          to.setHours(23, 59, 59, 999);
+          const to = getFilterDateEnd(filters.dateTo);
           if (row.dateSet > to) return false;
         }
       }
@@ -278,7 +275,6 @@ export default function Dashboard() {
       return total + (source === 'upsell' ? 1 : 2);
     }, 0);
   }, [quotaFiltered]);
-  const quotaExclusions = useMemo(() => getQuotaExclusions(rows, filters), [rows, filters]);
   const dashboardSummaryItems = useMemo(() => {
     const topSource = sourceCounts[0];
     const topStatus = statusCounts[0];
@@ -348,10 +344,6 @@ export default function Dashboard() {
 
         <div className="fade-up">
           <QuotaTracker points={quotaPoints} potentialPoints={potentialQuotaPoints} quota={22} />
-        </div>
-
-        <div className="fade-up">
-          <QuotaDebugCard exclusions={quotaExclusions} />
         </div>
 
         <div className="fade-up-delay relative z-[60] overflow-visible">
