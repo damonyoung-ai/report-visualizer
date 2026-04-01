@@ -9,7 +9,7 @@ import ComparisonSummary from '../../components/ComparisonSummary';
 import ComparisonTrendCharts from '../../components/ComparisonTrendCharts';
 import ComparisonBreakdowns from '../../components/ComparisonBreakdowns';
 import DashboardSummary from '../../components/DashboardSummary';
-import { buildMonthlyBreakdowns, buildMonthlyMetricSummaries, applyFilters, countBy } from '../../lib/aggregations';
+import { buildMonthlyBreakdowns, buildMonthlyMetricSummaries, applyFilters, applyQuotaFilters, countBy } from '../../lib/aggregations';
 import { fetchSheetGrid } from '../../lib/googleSheets';
 import { cleanDataset } from '../../lib/cleanDataset';
 import { DEFAULT_SHEET_URL } from '../../lib/config';
@@ -126,8 +126,12 @@ export default function ComparisonPage() {
     () => applyFilters(rows, { ...filters, dateFrom: '', dateTo: '', allTime: true }),
     [rows, filters]
   );
+  const quotaFiltered = useMemo(
+    () => applyQuotaFilters(rows, { ...filters, dateFrom: '', dateTo: '', allTime: true }),
+    [rows, filters]
+  );
   const monthKeys = useMemo(() => getRollingMonthKeys(view === 'rolling3' ? 3 : 2), [view]);
-  const summaries = useMemo(() => buildMonthlyMetricSummaries(filtered, monthKeys), [filtered, monthKeys]);
+  const summaries = useMemo(() => buildMonthlyMetricSummaries(quotaFiltered, monthKeys), [quotaFiltered, monthKeys]);
   const breakdowns = useMemo(() => buildMonthlyBreakdowns(filtered, monthKeys), [filtered, monthKeys]);
   const current = summaries[summaries.length - 1];
   const previous = summaries.length > 1 ? summaries[summaries.length - 2] : null;

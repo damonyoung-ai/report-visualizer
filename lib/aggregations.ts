@@ -49,6 +49,30 @@ export function applyFilters(rows: CanonicalRow[], filters: Filters) {
   });
 }
 
+export function applyQuotaFilters(rows: CanonicalRow[], filters: Filters) {
+  return rows.filter((row) => {
+    if (filters.excludeMissing) {
+      if (!row.meetingDate || !row.source || !row.status) return false;
+    }
+
+    if (!filters.allTime && (filters.dateFrom || filters.dateTo)) {
+      if (!row.meetingDate) return false;
+      if (filters.dateFrom && row.meetingDate < new Date(filters.dateFrom)) return false;
+      if (filters.dateTo) {
+        const to = new Date(filters.dateTo);
+        to.setHours(23, 59, 59, 999);
+        if (row.meetingDate > to) return false;
+      }
+    }
+
+    if (filters.sources.length && (!row.source || !filters.sources.includes(row.source))) return false;
+    if (filters.statuses.length && (!row.status || !filters.statuses.includes(row.status))) return false;
+    if (filters.aes.length && (!row.ae || !filters.aes.includes(row.ae))) return false;
+
+    return true;
+  });
+}
+
 export function countBy(rows: CanonicalRow[], key: 'source' | 'status' | 'ae') {
   const map = new Map<string, number>();
   rows.forEach((row) => {

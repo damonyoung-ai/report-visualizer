@@ -13,7 +13,7 @@ import AeCharts from '../../components/AeCharts';
 import DataPreviewTable from '../../components/DataPreviewTable';
 import QuotaTracker from '../../components/QuotaTracker';
 import DashboardSummary from '../../components/DashboardSummary';
-import { applyFilters, countBy } from '../../lib/aggregations';
+import { applyFilters, applyQuotaFilters, countBy } from '../../lib/aggregations';
 import { formatDate } from '../../lib/dateUtils';
 import { fetchSheetGrid } from '../../lib/googleSheets';
 import { cleanDataset } from '../../lib/cleanDataset';
@@ -148,6 +148,7 @@ export default function Dashboard() {
   };
 
   const filtered = useMemo(() => applyFilters(rows, filters), [rows, filters]);
+  const quotaFiltered = useMemo(() => applyQuotaFilters(rows, filters), [rows, filters]);
   const statusFiltered = useMemo(() => {
     return rows.filter((row) => {
       if (filters.excludeMissing) {
@@ -217,7 +218,7 @@ export default function Dashboard() {
   const statusCounts = useMemo(() => countBy(statusFiltered, 'status'), [statusFiltered]);
   const aeCounts = useMemo(() => countBy(filtered, 'ae'), [filtered]);
   const quotaPoints = useMemo(() => {
-    return filtered.reduce((total, row) => {
+    return quotaFiltered.reduce((total, row) => {
       const status = (row.status ?? '').trim().toLowerCase();
       const normalizedStatus = status.replace(/[^a-z]/g, '');
       const isQualifiedStatus = normalizedStatus === 'mtgcompletediscocc';
@@ -227,9 +228,9 @@ export default function Dashboard() {
       if (!source) return total;
       return total + (source === 'upsell' ? 1 : 2);
     }, 0);
-  }, [filtered]);
+  }, [quotaFiltered]);
   const potentialQuotaPoints = useMemo(() => {
-    return filtered.reduce((total, row) => {
+    return quotaFiltered.reduce((total, row) => {
       const status = (row.status ?? '').trim().toLowerCase();
       const normalizedStatus = status.replace(/[^a-z]/g, '');
       const isPotentialStatus =
@@ -240,7 +241,7 @@ export default function Dashboard() {
       if (!source) return total;
       return total + (source === 'upsell' ? 1 : 2);
     }, 0);
-  }, [filtered]);
+  }, [quotaFiltered]);
   const dashboardSummaryItems = useMemo(() => {
     const topSource = sourceCounts[0];
     const topStatus = statusCounts[0];
