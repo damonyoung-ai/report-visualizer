@@ -59,10 +59,47 @@ export default function Dashboard() {
 
   useEffect(() => {
     const raw = sessionStorage.getItem('sqo-dataset');
+    const storedUrl = localStorage.getItem('sqo-sheet-url');
+    const resolvedSheetUrl = storedUrl || DEFAULT_SHEET_URL;
+    setSheetUrl(resolvedSheetUrl);
+
     if (!raw) {
-      router.push('/');
+      if (!resolvedSheetUrl) {
+        router.push('/');
+        return;
+      }
+
+      const bootstrap = async () => {
+        setSyncing(true);
+        try {
+          const grid = await fetchSheetGrid(resolvedSheetUrl, { bypassCache: true });
+          const cleaned = cleanDataset(grid);
+          setRows(cleaned.rows);
+          sessionStorage.setItem(
+            'sqo-dataset',
+            JSON.stringify({
+              rows: cleaned.rows.map((row) => ({
+                dateSet: row.dateSet ? row.dateSet.toISOString() : null,
+                meetingDate: row.meetingDate ? row.meetingDate.toISOString() : null,
+                source: row.source,
+                status: row.status,
+                ae: row.ae,
+                raw: row.raw,
+              })),
+              rawHeaders: cleaned.rawHeaders,
+              canonicalHeaders: cleaned.canonicalHeaders,
+            })
+          );
+          setLastSync(new Date());
+        } finally {
+          setSyncing(false);
+        }
+      };
+
+      bootstrap();
       return;
     }
+
     const payload = JSON.parse(raw) as { rows: { dateSet: string | null; meetingDate: string | null; source: string | null; status: string | null; ae: string | null; raw: Record<string, string | null> }[] };
     setRows(
       payload.rows.map((row) => ({
@@ -75,8 +112,6 @@ export default function Dashboard() {
       }))
     );
     setLastSync(new Date());
-    const storedUrl = localStorage.getItem('sqo-sheet-url');
-    setSheetUrl(storedUrl || DEFAULT_SHEET_URL);
   }, [router]);
 
   const syncFromSheet = async () => {
@@ -269,9 +304,11 @@ export default function Dashboard() {
       <main className="min-h-screen bg-grid px-6 py-10">
         <div className="mx-auto max-w-4xl">
           <div className="card p-6">
-            <h2 className="text-xl font-semibold">No dataset loaded</h2>
-            <p className="mt-2 text-sm text-slate/70">Upload a file to view the dashboard.</p>
-            <button className="button mt-4" onClick={() => router.push('/')}>Back to upload</button>
+            <h2 className="text-xl font-semibold">{syncing ? 'Loading dashboard' : 'No dataset loaded'}</h2>
+            <p className="mt-2 text-sm text-slate/70">
+              {syncing ? 'Fetching the latest sheet data.' : 'Upload a file to view the dashboard.'}
+            </p>
+            {!syncing ? <button className="button mt-4" onClick={() => router.push('/')}>Back to upload</button> : null}
           </div>
         </div>
       </main>
@@ -290,16 +327,6 @@ export default function Dashboard() {
             <button className="button-outline" onClick={exportCleanedCsv}>Download cleaned CSV</button>
             <button className="button-outline" onClick={() => router.push('/salesforce')}>Open Salesforce view</button>
             <button className="button-outline" onClick={() => router.push('/comparison')}>Open comparison view</button>
-            <button
-              className="button-outline"
-              onClick={() => {
-                sessionStorage.removeItem('sqo-dataset');
-                localStorage.removeItem('sqo-sheet-url');
-                router.push('/');
-              }}
-            >
-              Run new report
-            </button>
             {sheetUrl ? (
               <button className="button-outline" onClick={syncFromSheet} disabled={syncing}>
                 {syncing ? 'Syncing...' : 'Sync now'}
