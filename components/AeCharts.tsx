@@ -12,6 +12,9 @@ export default function AeCharts({ rows }: { rows: CanonicalRow[] }) {
 
   const statusCounts = countBy(rows, 'status');
   const topStatuses = statusCounts.slice(0, 5).map(([label]) => label);
+  if (!topStatuses.includes('Disqualified') && statusCounts.some(([label]) => label === 'Disqualified')) {
+    topStatuses[topStatuses.length - 1] = 'Disqualified';
+  }
   const stackedData = stackByStatus(rows, topStatuses);
 
   return (

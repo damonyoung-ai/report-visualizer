@@ -221,6 +221,10 @@ function topBreakdownForMonth(
     .slice(0, topN)
     .map(([label]) => label);
 
+  if (field === 'status' && !topLabels.includes('Disqualified') && combined.has('Disqualified') && topLabels.length) {
+    topLabels[topLabels.length - 1] = 'Disqualified';
+  }
+
   return monthKeys.map((monthKey) => {
     const monthRows = filterRowsForMonthKey(rows, monthKey, 'meetingDate');
     const counts = new Map<string, number>();
